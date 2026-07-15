@@ -71,7 +71,7 @@ trait Helpers
         $ready = $this->waitForStorybookReady($process, $url, $readyTimeout);
 
         if ($ready) {
-            $this->info("Storybook ready di http://{$host}:{$port}");
+            $this->info("Storybook ready on http://{$host}:{$port}");
         } else {
             if ($process->isRunning()) {
                 $this->error(
