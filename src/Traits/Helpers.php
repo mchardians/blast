@@ -48,6 +48,94 @@ trait Helpers
         }
     }
 
+    protected function runStorybookWithReadyCheck(
+        array $command,
+        $envVars,
+        string $host,
+        int $port,
+        int $readyTimeout = 60,
+        bool $foreground = true,
+    ) {
+        $process = new Process($command, $this->vendorPath, $envVars);
+
+        $process->setTimeout(null);
+        $process->setTty($foreground && Process::isTtySupported());
+        $process->enableOutput();
+
+        $process->start();
+
+        $url = "http://{$host}:{$port}/iframe.html";
+
+        $this->info("Waiting for Storybook to be ready on {$url} ...");
+
+        $ready = $this->waitForStorybookReady($process, $url, $readyTimeout);
+
+        if ($ready) {
+            $this->info("✔ Storybook ready di http://{$host}:{$port}");
+        } else {
+            if ($process->isRunning()) {
+                $this->error(
+                    "Storybook did not respond within $readyTimeout seconds, but the process is still running. Continuing to wait...",
+                );
+            } else {
+                $this->error(
+                    'The Storybook process stopped before it was ready.',
+                );
+
+                return $process;
+            }
+        }
+
+        if ($foreground) {
+            $process->wait();
+        }
+
+        return $process;
+    }
+
+    private function waitForStorybookReady(
+        Process $process,
+        string $url,
+        int $timeout = 60,
+        int $interval = 1,
+    ): bool {
+        $start = time();
+
+        while (time() - $start < $timeout) {
+            if (!$process->isRunning()) {
+                return false;
+            }
+
+            $httpCode = $this->pingUrl($url);
+
+            if ($httpCode >= 200 && $httpCode < 400) {
+                return true;
+            }
+
+            sleep($interval);
+        }
+
+        return false;
+    }
+
+    private function pingUrl(string $url): int
+    {
+        $ch = curl_init($url);
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_NOBODY, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+        curl_exec($ch);
+
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return $httpCode;
+    }
+
     /**
      * @return void
      */
@@ -73,11 +161,17 @@ trait Helpers
     {
         $vendorPath = config('blast.vendor_path');
 
-        if (Str::startsWith($vendorPath, '/')) {
+        if ($this->isAbsolutePath($vendorPath)) {
             return $vendorPath;
         }
 
         return base_path($vendorPath);
+    }
+
+    private function isAbsolutePath(string $path): bool
+    {
+        return Str::startsWith($path, '/') ||
+            (bool) preg_match('/^[a-zA-Z]:[\\\\\/]/', $path);
     }
 
     private function dependenciesInstalled()

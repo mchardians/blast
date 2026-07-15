@@ -46,7 +46,7 @@ class DataStoreTest extends TestCase
 
     private function writeExampleDataFile(string $path)
     {
-        if (!Str::startsWith($path, '/')) {
+        if (!$this->isAbsolutePath($path)) {
             $path = base_path($path);
         }
         File::ensureDirectoryExists($path);
@@ -69,9 +69,15 @@ class DataStoreTest extends TestCase
 
     private function cleanup(string $path)
     {
-        if (!Str::startsWith($path, '/')) {
+        if (!$this->isAbsolutePath($path)) {
             $path = base_path($path);
         }
         File::deleteDirectory($path);
+    }
+
+    private function isAbsolutePath(string $path): bool
+    {
+        return Str::startsWith($path, '/') ||
+            (bool) preg_match('/^[a-zA-Z]:[\\\\\/]/', $path);
     }
 }

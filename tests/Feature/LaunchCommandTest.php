@@ -18,11 +18,10 @@ class LaunchCommandTest extends TestCase
             ->shouldReceive('ensureDirectoryExists')
             ->andReturn(true);
         $filesystemMock->shouldReceive('put')->andReturn(true);
-
         $filesystemMock->shouldReceive('exists')->andReturn(false);
 
         $commandMock = Mockery::mock(
-            Launch::class . '[installDependencies,runProcessInBlast]',
+            Launch::class . '[installDependencies,runStorybookWithReadyCheck]',
             [$filesystemMock],
         );
         $commandMock->shouldAllowMockingProtectedMethods();
@@ -30,16 +29,15 @@ class LaunchCommandTest extends TestCase
         $commandMock->shouldReceive('installDependencies')->once();
 
         $commandMock
-            ->shouldReceive('runProcessInBlast')
+            ->shouldReceive('runStorybookWithReadyCheck')
             ->once()
-            ->withArgs(function ($command, $disableTimeout, $envVars) {
+            ->withArgs(function ($command, $envVars, $host, $port) {
                 $isCorrectCommand = $command === ['npm', 'run', 'storybook'];
-                $hasCorrectHost =
-                    isset($envVars['STORYBOOK_BIND_HOST']) &&
-                    $envVars['STORYBOOK_BIND_HOST'] === '192.168.1.99';
+                $hasCorrectHost = $host === '192.168.1.99';
 
                 return $isCorrectCommand && $hasCorrectHost;
-            });
+            })
+            ->andReturn(null);
 
         $this->app->instance(Launch::class, $commandMock);
 

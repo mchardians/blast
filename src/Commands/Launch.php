@@ -177,34 +177,44 @@ class Launch extends Command
         $this->filesystem->ensureDirectoryExists($this->vendorPath . '/tmp');
         $this->filesystem->put($this->vendorPath . '/tmp/_blast', '');
 
-        $this->runProcessInBlast(['npm', 'run', 'storybook'], true, [
-            'STORYBOOK_SERVER_URL' => $this->storybookServer,
-            'STORYBOOK_STATIC_PATH' => public_path(),
-            'STORYBOOK_PORT' =>
-                $this->option('port') ?? config('blast.storybook_port', 6006),
-            'STORYBOOK_HOST' => config('blast.storybook_host', '127.0.0.1'),
-            'STORYBOOK_STATUSES' => json_encode($this->storybookStatuses),
-            'STORYBOOK_THEME' => json_encode($this->storybookTheme),
-            'STORYBOOK_CUSTOM_THEME' => json_encode($this->customTheme),
-            'STORYBOOK_DOCS_THEME' => json_encode($this->docsTheme),
-            'STORYBOOK_EXPANDED_CONTROLS' => json_encode(
-                $this->expandedControls,
-            ),
-            'STORYBOOK_GLOBAL_TYPES' => json_encode(
-                $this->storybookGlobalTypes,
-            ),
-            'STORYBOOK_SORT_ORDER' => json_encode($this->storybookSortOrder),
-            'STORYBOOK_VIEWPORTS' => json_encode(
-                $this->buildTailwindViewports($this->storybookViewports),
-            ),
-            'LIBSTORYPATH' => $this->vendorPath . '/stories',
-            'PROJECTPATH' => base_path(),
-            'COMPONENTPATH' => base_path('resources/views/stories'),
-            'STORYBOOK_CONFIG_PATH' => $this->filesystem->exists(
-                base_path('.storybook'),
-            )
-                ? base_path('.storybook')
-                : '.storybook',
-        ]);
+        $storybookPort =
+            $this->option('port') ?? config('blast.storybook_port', 6006);
+        $storybookHost = config('blast.storybook_host', '127.0.0.1');
+
+        $this->runStorybookWithReadyCheck(
+            ['npm', 'run', 'storybook'],
+            [
+                'STORYBOOK_SERVER_URL' => $this->storybookServer,
+                'STORYBOOK_STATIC_PATH' => public_path(),
+                'STORYBOOK_PORT' => $storybookPort,
+                'STORYBOOK_HOST' => $storybookHost,
+                'STORYBOOK_STATUSES' => json_encode($this->storybookStatuses),
+                'STORYBOOK_THEME' => json_encode($this->storybookTheme),
+                'STORYBOOK_CUSTOM_THEME' => json_encode($this->customTheme),
+                'STORYBOOK_DOCS_THEME' => json_encode($this->docsTheme),
+                'STORYBOOK_EXPANDED_CONTROLS' => json_encode(
+                    $this->expandedControls,
+                ),
+                'STORYBOOK_GLOBAL_TYPES' => json_encode(
+                    $this->storybookGlobalTypes,
+                ),
+                'STORYBOOK_SORT_ORDER' => json_encode(
+                    $this->storybookSortOrder,
+                ),
+                'STORYBOOK_VIEWPORTS' => json_encode(
+                    $this->buildTailwindViewports($this->storybookViewports),
+                ),
+                'LIBSTORYPATH' => $this->vendorPath . '/stories',
+                'PROJECTPATH' => base_path(),
+                'COMPONENTPATH' => base_path('resources/views/stories'),
+                'STORYBOOK_CONFIG_PATH' => $this->filesystem->exists(
+                    base_path('.storybook'),
+                )
+                    ? base_path('.storybook')
+                    : '.storybook',
+            ],
+            $storybookHost,
+            $storybookPort,
+        );
     }
 }
