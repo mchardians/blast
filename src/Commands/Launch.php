@@ -172,6 +172,7 @@ class Launch extends Command
             'Setup Complete. Booting Storybook and watching stories.',
         );
         $progressBar->finish();
+        $this->newLine();
 
         // fix CORS in dev
         $this->filesystem->ensureDirectoryExists($this->vendorPath . '/tmp');
