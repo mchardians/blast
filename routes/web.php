@@ -18,10 +18,8 @@ use Illuminate\Support\Str;
 if (config('blast.enabled')) {
     $sb_url = config('blast.storybook_server_url');
 
-    $sb_route = ltrim(
-        parse_url($sb_url, PHP_URL_PATH) ?? 'storybook_preview',
-        '/',
-    );
+    $sb_route = $sb_route =
+        parse_url($sb_url, PHP_URL_PATH) ?: '/storybook_preview';
 
     Route::get($sb_route, function () {
         return abort(403, 'To access blast go to localhost:6006');

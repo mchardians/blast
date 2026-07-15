@@ -9,9 +9,9 @@ use Mockery;
 
 class LaunchCommandTest extends TestCase
 {
-    public function test_it_injects_bind_host_to_process_environment()
+    public function test_it_injects_storybook_host_to_process_environment()
     {
-        config(['blast.storybook_bind_host' => '192.168.1.99']);
+        config(['blast.storybook_host' => '192.168.1.99']);
 
         $filesystemMock = Mockery::mock(Filesystem::class);
         $filesystemMock

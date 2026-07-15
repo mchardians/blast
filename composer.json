@@ -22,6 +22,9 @@
     "support": {
         "issues": "https://github.com/area17/blast/issues/"
     },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
+    },
     "require": {
         "php": "^7.3|^8.0|^8.1",
         "ext-json": "*",

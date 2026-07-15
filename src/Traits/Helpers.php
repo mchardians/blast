@@ -37,14 +37,13 @@ trait Helpers
 
         if ($disableOutput) {
             $process->disableOutput();
-            $process->run();
         } else {
             $process->enableOutput();
+        }
 
-            $process->run(function ($type, $buffer) {
-                echo $buffer;
-            });
+        $process->run();
 
+        if (!$disableOutput) {
             return $process->getOutput();
         }
     }

@@ -4,8 +4,6 @@ namespace A17\Blast\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use A17\Blast\Traits\Helpers;
 use A17\Blast\Traits\TailwindViewports;
 
@@ -121,7 +119,6 @@ class Launch extends Command
         $npmInstall = $this->option('install');
         $noInstall = $this->option('noInstall');
         $installMessage = $this->getInstallMessage($npmInstall);
-        $port = $this->option('port');
 
         // init progress bar
         $progressBar = $this->output->createProgressBar(2);
@@ -183,11 +180,9 @@ class Launch extends Command
         $this->runProcessInBlast(['npm', 'run', 'storybook'], true, [
             'STORYBOOK_SERVER_URL' => $this->storybookServer,
             'STORYBOOK_STATIC_PATH' => public_path(),
-            'STORYBOOK_PORT' => $port ?? 6006,
-            'STORYBOOK_BIND_HOST' => config(
-                'blast.storybook_bind_host',
-                '127.0.0.1',
-            ),
+            'STORYBOOK_PORT' =>
+                $this->option('port') ?? config('blast.storybook_port', 6006),
+            'STORYBOOK_HOST' => config('blast.storybook_host', '127.0.0.1'),
             'STORYBOOK_STATUSES' => json_encode($this->storybookStatuses),
             'STORYBOOK_THEME' => json_encode($this->storybookTheme),
             'STORYBOOK_CUSTOM_THEME' => json_encode($this->customTheme),
