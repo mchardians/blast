@@ -35,11 +35,17 @@ class DataStore
     {
         $dataPath = config('blast.data_path', 'resources/views/stories/data');
 
-        if (Str::startsWith($dataPath, '/')) {
+        if ($this->isAbsolutePath($dataPath)) {
             return $dataPath;
         }
 
         return base_path($dataPath);
+    }
+
+    private function isAbsolutePath(string $path): bool
+    {
+        return Str::startsWith($path, '/') ||
+            (bool) preg_match('/^[a-zA-Z]:[\\\\\/]/', $path);
     }
 
     private function getComponentsData()

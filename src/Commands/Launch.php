@@ -4,8 +4,6 @@ namespace A17\Blast\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use A17\Blast\Traits\Helpers;
 use A17\Blast\Traits\TailwindViewports;
 
@@ -85,7 +83,6 @@ class Launch extends Command
         $npmInstall = $this->option('install');
         $noInstall = $this->option('noInstall');
         $installMessage = $this->getInstallMessage($npmInstall);
-        $port = $this->option('port');
 
         // init progress bar
         $progressBar = $this->output->createProgressBar(2);
@@ -139,41 +136,50 @@ class Launch extends Command
             'Setup Complete. Booting Storybook and watching stories.',
         );
         $progressBar->finish();
+        $this->newLine();
 
         // fix CORS in dev
         $this->filesystem->ensureDirectoryExists($this->vendorPath . '/tmp');
         $this->filesystem->put($this->vendorPath . '/tmp/_blast', '');
 
-        $this->runProcessInBlast(['npm', 'run', 'storybook'], true, [
-            'STORYBOOK_SERVER_URL' => $this->storybookServer,
-            'STORYBOOK_STATIC_PATH' => public_path(),
-            'STORYBOOK_PORT' => $port ?? 6006,
-            'STORYBOOK_BIND_HOST' => config(
-                'blast.storybook_bind_host',
-                '127.0.0.1',
-            ),
-            'STORYBOOK_STATUSES' => json_encode($this->storybookStatuses),
-            'STORYBOOK_THEME' => json_encode($this->storybookTheme),
-            'STORYBOOK_CUSTOM_THEME' => json_encode($this->customTheme),
-            'STORYBOOK_DOCS_THEME' => json_encode($this->docsTheme),
-            'STORYBOOK_EXPANDED_CONTROLS' => json_encode(
-                $this->expandedControls,
-            ),
-            'STORYBOOK_GLOBAL_TYPES' => json_encode(
-                $this->storybookGlobalTypes,
-            ),
-            'STORYBOOK_SORT_ORDER' => json_encode($this->storybookSortOrder),
-            'STORYBOOK_VIEWPORTS' => json_encode(
-                $this->buildTailwindViewports($this->storybookViewports),
-            ),
-            'LIBSTORYPATH' => $this->vendorPath . '/stories',
-            'PROJECTPATH' => base_path(),
-            'COMPONENTPATH' => base_path('resources/views/stories'),
-            'STORYBOOK_CONFIG_PATH' => $this->filesystem->exists(
-                base_path('.storybook'),
-            )
-                ? base_path('.storybook')
-                : '.storybook',
-        ]);
+        $storybookPort =
+            $this->option('port') ?? config('blast.storybook_port', 6006);
+        $storybookHost = config('blast.storybook_host', '127.0.0.1');
+
+        $this->runStorybookWithReadyCheck(
+            ['npm', 'run', 'storybook'],
+            [
+                'STORYBOOK_SERVER_URL' => $this->storybookServer,
+                'STORYBOOK_STATIC_PATH' => public_path(),
+                'STORYBOOK_PORT' => $storybookPort,
+                'STORYBOOK_HOST' => $storybookHost,
+                'STORYBOOK_STATUSES' => json_encode($this->storybookStatuses),
+                'STORYBOOK_THEME' => json_encode($this->storybookTheme),
+                'STORYBOOK_CUSTOM_THEME' => json_encode($this->customTheme),
+                'STORYBOOK_DOCS_THEME' => json_encode($this->docsTheme),
+                'STORYBOOK_EXPANDED_CONTROLS' => json_encode(
+                    $this->expandedControls,
+                ),
+                'STORYBOOK_GLOBAL_TYPES' => json_encode(
+                    $this->storybookGlobalTypes,
+                ),
+                'STORYBOOK_SORT_ORDER' => json_encode(
+                    $this->storybookSortOrder,
+                ),
+                'STORYBOOK_VIEWPORTS' => json_encode(
+                    $this->buildTailwindViewports($this->storybookViewports),
+                ),
+                'LIBSTORYPATH' => $this->vendorPath . '/stories',
+                'PROJECTPATH' => base_path(),
+                'COMPONENTPATH' => base_path('resources/views/stories'),
+                'STORYBOOK_CONFIG_PATH' => $this->filesystem->exists(
+                    base_path('.storybook'),
+                )
+                    ? base_path('.storybook')
+                    : '.storybook',
+            ],
+            $storybookHost,
+            $storybookPort,
+        );
     }
 }
