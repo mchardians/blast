@@ -61,7 +61,9 @@ trait Helpers
         $process->setTty($foreground && Process::isTtySupported());
         $process->enableOutput();
 
-        $process->start();
+        $process->start(function ($type, $buffer) {
+            echo $buffer;
+        });
 
         $url = "http://{$host}:{$port}/iframe.html";
 
@@ -80,6 +82,9 @@ trait Helpers
                 $this->error(
                     'The Storybook process stopped before it was ready.',
                 );
+
+                $this->line('<fg=red>' . $process->getErrorOutput() . '</>');
+                $this->line('<fg=yellow>' . $process->getOutput() . '</>');
 
                 return $process;
             }
