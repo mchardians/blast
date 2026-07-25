@@ -1,4 +1,4 @@
-import { addons } from '@storybook/addons';
+import { addons } from '@storybook/manager-api';
 import { themes } from '@storybook/theming';
 import theme from './theme';
 
@@ -8,7 +8,7 @@ let storybookTheme = () => {
   if (configTheme === 'dark') {
     addons.setConfig({ theme: themes.dark });
   } else {
-    addons.setConfig({ theme: themes.normal });
+    addons.setConfig({ theme: themes.light });
   }
 };
 

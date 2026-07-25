@@ -8,7 +8,7 @@ let setDocsTheme = (configDocsTheme) => {
   } else if (configDocsTheme === 'custom') {
     return theme;
   } else {
-    return themes.normal;
+    return themes.light;
   }
 };
 
@@ -26,9 +26,6 @@ const preview = {
       url: process.env.STORYBOOK_SERVER_URL
     },
     layout: 'centered',
-    status: {
-      statuses: JSON.parse(process.env.STORYBOOK_STATUSES)
-    },
     docs: {
       extractComponentDescription: (component, { notes }) => {
         if (notes) {
