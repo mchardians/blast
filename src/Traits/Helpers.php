@@ -43,6 +43,8 @@ trait Helpers
         if (!$disableOutput) {
             return $process->getOutput();
         }
+
+        return null;
     }
 
     protected function runStorybookWithReadyCheck(
