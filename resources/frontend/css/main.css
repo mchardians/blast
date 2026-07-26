@@ -7,6 +7,8 @@
             blast-text-base
             blast-font-normal
             blast-antialiased;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .blast-wysiwyg h1,
@@ -88,8 +90,11 @@
 
 .blast-wysiwyg code {
     @apply blast-py-1 blast-px-2 blast-bg-gray-100 blast-text-sm;
+    word-break: break-all;
 }
 
 .blast-wysiwyg pre {
     @apply blast-p-4 blast-bg-gray-100 blast-text-sm;
+    overflow-x: auto;
+    max-width: 100%;
 }
