@@ -1,4 +1,4 @@
-import '../public/main.css';
+import '../vendor/area17/blast/public/main.css';
 import { themes } from '@storybook/theming';
 import theme from './theme';
 
@@ -8,19 +8,35 @@ let setDocsTheme = (configDocsTheme) => {
   } else if (configDocsTheme === 'custom') {
     return theme;
   } else {
-    return themes.light;
+    return themes.normal;
   }
 };
 
-const customViewports = JSON.parse(process.env.STORYBOOK_VIEWPORTS);
+const parsedViewports = process.env.STORYBOOK_VIEWPORTS
+  ? JSON.parse(process.env.STORYBOOK_VIEWPORTS)
+  : null;
+const parsedExpandedControls = process.env.STORYBOOK_EXPANDED_CONTROLS
+  ? JSON.parse(process.env.STORYBOOK_EXPANDED_CONTROLS)
+  : true;
+const parsedDocsTheme = process.env.STORYBOOK_DOCS_THEME
+  ? JSON.parse(process.env.STORYBOOK_DOCS_THEME)
+  : 'normal';
+const parsedSortOrder = process.env.STORYBOOK_SORT_ORDER
+  ? JSON.parse(process.env.STORYBOOK_SORT_ORDER)
+  : [];
+const parsedGlobalTypes = process.env.STORYBOOK_GLOBAL_TYPES
+  ? JSON.parse(process.env.STORYBOOK_GLOBAL_TYPES)
+  : {};
+
+const resolvedTheme = setDocsTheme(parsedDocsTheme);
 
 const preview = {
   parameters: {
     viewport: {
-      viewports: customViewports
+      viewports: parsedViewports
     },
     controls: {
-      expanded: JSON.parse(process.env.STORYBOOK_EXPANDED_CONTROLS)
+      expanded: parsedExpandedControls
     },
     server: {
       url: process.env.STORYBOOK_SERVER_URL
@@ -35,15 +51,15 @@ const preview = {
         }
         return null;
       },
-      theme: setDocsTheme(JSON.parse(process.env.STORYBOOK_DOCS_THEME))
+      theme: resolvedTheme
     },
-    options: {
-      storySort: {
-        order: JSON.parse(process.env.STORYBOOK_SORT_ORDER)
-      }
-    }
+    options: {}
   },
-  globalTypes: JSON.parse(process.env.STORYBOOK_GLOBAL_TYPES)
+  globalTypes: parsedGlobalTypes
+};
+
+preview.parameters.options.storySort = {
+  order: parsedSortOrder
 };
 
 export default preview;

@@ -6,7 +6,7 @@ return [
     'storybook_version' => '8.5.0',
 
     'storybook_server_url' =>
-        env('STORYBOOK_SERVER_HOST', env('APP_URL')) . '/storybook_preview',
+        env('STORYBOOK_SERVER_URL', env('APP_URL')) . '/storybook_preview',
 
     'storybook_host' => env('STORYBOOK_HOST', '127.0.0.1'),
     'storybook_port' => env('STORYBOOK_PORT', 6006),
