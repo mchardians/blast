@@ -106,8 +106,16 @@ class GenerateStories extends Command
 
         // get relative path
         $relativePath = str_replace($storyPathSlash, '', $dirname);
+        $normalizedRelativePath = str_replace(
+            [DIRECTORY_SEPARATOR, '\\'],
+            '/',
+            $relativePath,
+        );
         $storyPath =
-            $this->packageStoriesPath . '/' . $relativePath . '.stories.json';
+            $this->packageStoriesPath .
+            '/' .
+            $normalizedRelativePath .
+            '.stories.json';
 
         // check if story exists
         if ($this->filesystem->exists($storyPath)) {
@@ -203,10 +211,16 @@ class GenerateStories extends Command
 
         foreach ($groups as $group) {
             $template = $this->buildStoryTemplate($group);
+            $normalizedGroupPath = str_replace(
+                [DIRECTORY_SEPARATOR, '\\'],
+                '/',
+                $group['path'],
+            );
+
             $storyFilePath =
                 $this->packageStoriesPath .
                 '/' .
-                $group['path'] .
+                $normalizedGroupPath .
                 '.stories.json';
             $storyPath = Str::beforeLast($storyFilePath, '/');
             $fileData = json_encode($template, JSON_PRETTY_PRINT);
