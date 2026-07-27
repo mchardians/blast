@@ -5,10 +5,30 @@ return [
 
     'storybook_version' => '7.1.1',
 
+    // ---------------------------------------------------------
+    // Backend (Laravel) URL for Storybook
+    // ---------------------------------------------------------
+    // This is where Storybook sends requests to render your components.
+    // 1. It reads 'STORYBOOK_SERVER_URL' from your .env file.
+    // 2. Based on your .env, this is dynamically built as "${APP_URL}:8000".
+    // 3. If it's missing from .env, it falls back to 'APP_URL'.
+    // 4. Finally, it appends '/storybook_preview' to the URL.
+    // Example result: "http://localhost:8000/storybook_preview"
     'storybook_server_url' =>
-        env('STORYBOOK_SERVER_HOST', env('APP_URL')) . '/storybook_preview',
+        env('STORYBOOK_SERVER_URL', env('APP_URL')) . '/storybook_preview',
 
+    // ---------------------------------------------------------
+    // Storybook UI Server Settings
+    // ---------------------------------------------------------
+    // These settings configure the standalone Storybook app
+    // interface, not the Laravel backend.
+
+    // The IP address where the Storybook UI runs.
+    // Uses 'STORYBOOK_HOST' from .env, or defaults to '127.0.0.1'.
     'storybook_host' => env('STORYBOOK_HOST', '127.0.0.1'),
+
+    // The port where the Storybook UI runs.
+    // Uses 'STORYBOOK_PORT' from .env, or defaults to 6006.
     'storybook_port' => env('STORYBOOK_PORT', 6006),
 
     /**
