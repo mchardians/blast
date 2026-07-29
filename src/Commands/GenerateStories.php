@@ -262,8 +262,16 @@ class GenerateStories extends Command
                 $filename = $file->getFilename();
 
                 if (Str::endsWith($filename, '.blade.php')) {
-                    $relativePathname = $file->getRelativePathname();
-                    $relativePath = $file->getRelativePath();
+                    $relativePathname = str_replace(
+                        '\\',
+                        '/',
+                        $file->getRelativePathname(),
+                    );
+                    $relativePath = str_replace(
+                        '\\',
+                        '/',
+                        $file->getRelativePath(),
+                    );
                     $pathname = $file->getPathname();
                     $storyName =
                         $relativePath == '' ? $filename : $relativePath;
