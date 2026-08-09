@@ -310,13 +310,18 @@ class GenerateStories extends Command
      */
     private function buildStoryTemplate($item)
     {
+        $title = collect(explode('/', $item['path']))
+            ->map(function ($segment) {
+                return Str::headline($segment);
+            })
+            ->implode('/');
+
         $childStories = $this->updateStoryOrder(
             array_map([$this, 'buildChildTemplate'], $item['children']),
         );
 
         $docsPath = $this->storyViewsPath . '/' . $item['path'];
         $docsFiles = glob($docsPath . '/*.md');
-        $title = ucwords($item['path'], '/');
 
         // If it's a root story, check if the name has been changed and update the parent title
         if (Arr::has($item, 'isRoot') && $item['isRoot']) {

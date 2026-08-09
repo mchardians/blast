@@ -13,13 +13,17 @@ const config = {
     defaultName: 'Docs'
   },
   features: {
-    storyStoreV7: false
+    storyStoreV7: true
   },
   framework: {
     name: '@storybook/server-webpack5',
     options: {
       quiet: true
     }
+  },
+  webpackFinal: async (config) => {
+    config.devtool = false;
+    return config;
   }
 };
 

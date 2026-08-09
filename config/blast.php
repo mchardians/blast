@@ -3,7 +3,7 @@
 return [
     'enabled' => env('BLAST_ENABLED', true),
 
-    'storybook_version' => '7.1.1',
+    'storybook_version' => '7.6.24',
 
     // ---------------------------------------------------------
     // Backend (Laravel) URL for Storybook
@@ -104,7 +104,9 @@ return [
         'inputBorderRadius' => 4,
         'brandTitle' => 'Blast - Storybook for blade',
         'brandUrl' => 'https://storybook.js.org',
-        'brandImage' => \A17\Blast\Storybook\StorybookLogo::defaultLogo(),
+        'brandImage' => class_exists(\A17\Blast\Storybook\StorybookLogo::class)
+            ? \A17\Blast\Storybook\StorybookLogo::defaultLogo()
+            : null,
     ],
 
     'storybook_global_types' => [],

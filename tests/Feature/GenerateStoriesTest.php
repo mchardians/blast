@@ -88,4 +88,54 @@ class GenerateStoriesTest extends TestCase
 
         $this->assertTrue(File::exists($nestedStoriesPath));
     }
+
+    public function test_formats_story_titles_properly_using_headline()
+    {
+        $this->copyStubs([
+            'link.blade.php' => resource_path(
+                'views/components/link/link.blade.php',
+            ),
+            'paragraph.blade.php' => resource_path(
+                'views/components/paragraph/paragraph.blade.php',
+            ),
+
+            'link.story.blade.php' => resource_path(
+                'views/stories/getting-started/introduction-page/introduction.blade.php',
+            ),
+
+            'paragraph.story.blade.php' => resource_path(
+                'views/stories/admin_dashboard/user_profile/profile.blade.php',
+            ),
+        ]);
+
+        $gettingStartedPath = $this->vendorPath(
+            'stories/getting-started/introduction-page.stories.json',
+        );
+        $adminDashboardPath = $this->vendorPath(
+            'stories/admin_dashboard/user_profile.stories.json',
+        );
+
+        Artisan::call('blast:generate-stories');
+
+        $this->assertTrue(
+            File::exists($gettingStartedPath),
+            'File JSON untuk getting-started tidak ditemukan.',
+        );
+        $this->assertTrue(
+            File::exists($adminDashboardPath),
+            'File JSON untuk admin_dashboard tidak ditemukan.',
+        );
+
+        $gettingStartedData = json_decode(File::get($gettingStartedPath), true);
+        $adminDashboardData = json_decode(File::get($adminDashboardPath), true);
+
+        $this->assertEquals(
+            'Getting Started/Introduction Page',
+            $gettingStartedData['title'],
+        );
+        $this->assertEquals(
+            'Admin Dashboard/User Profile',
+            $adminDashboardData['title'],
+        );
+    }
 }
