@@ -11,7 +11,6 @@ use A17\Blast\Traits\TailwindViewports;
 
 class Publish extends Command
 {
-
     use Helpers;
     use TailwindViewports;
 
@@ -23,7 +22,7 @@ class Publish extends Command
     protected $signature = 'blast:publish
                                         {--install : Force install dependencies}
                                         {--url= : set the server url used to load the stories}
-                                        {--o|output-dir=storybook-static : Directory where to store built files}';
+                                        {--o|output-dir=docs/storybook : Directory where to store built files}';
 
     /**
      * The console command description.

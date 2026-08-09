@@ -80,6 +80,16 @@ class PublishStorybookConfig extends Command
                 '../vendor/area17/blast/public/main.css',
                 $projectConfigPath . '/preview.js',
             );
+            $this->filesystem->replaceInFile(
+                "from 'marked'",
+                "from '../vendor/area17/blast/node_modules/marked'",
+                $projectConfigPath . '/preview.js',
+            );
+            $this->filesystem->replaceInFile(
+                "from 'dompurify'",
+                "from '../vendor/area17/blast/node_modules/dompurify'",
+                $projectConfigPath . '/preview.js',
+            );
         }
 
         // Update paths in main.js
