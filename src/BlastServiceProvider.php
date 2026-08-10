@@ -3,6 +3,7 @@
 namespace A17\Blast;
 
 use A17\Blast\Commands\Demo;
+use A17\Blast\Commands\GenerateIcons;
 use A17\Blast\Commands\GenerateStories;
 use A17\Blast\Commands\GenerateUIDocs;
 use A17\Blast\Commands\Launch;
@@ -41,6 +42,7 @@ final class BlastServiceProvider extends ServiceProvider
                 Launch::class,
                 Publish::class,
                 PublishStorybookConfig::class,
+                GenerateIcons::class,
             ]);
         }
     }

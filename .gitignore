@@ -13,3 +13,11 @@ yarn-error.log
 !/stories/.keep
 .php_cs.cache
 composer.lock
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
