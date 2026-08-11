@@ -90,6 +90,16 @@ class PublishStorybookConfig extends Command
                 "from '../vendor/area17/blast/node_modules/dompurify'",
                 $projectConfigPath . '/preview.js',
             );
+            $this->filesystem->replaceInFile(
+                "from '../resources/storybook/utilities/styles'",
+                "from '../vendor/area17/blast/resources/storybook/utilities/styles'",
+                $projectConfigPath . '/preview.js',
+            );
+            $this->filesystem->replaceInFile(
+                "from '../resources/storybook/API/doc-blocks'",
+                "from '../vendor/area17/blast/resources/storybook/API/doc-blocks'",
+                $projectConfigPath . '/preview.js',
+            );
         }
 
         // Update paths in main.js

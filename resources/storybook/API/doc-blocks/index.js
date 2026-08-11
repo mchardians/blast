@@ -1,5 +1,5 @@
 import { parseTypography } from './typography/typography';
-import { parseStory } from './Story';
+import { parseStory } from './story/story';
 import { parseSource, initSourceInteractivity } from './source/source';
 import { parseCanvas, initCanvasInteractivity } from './canvas/canvas';
 import { parseControls, initControlsInteractivity } from './controls/controls';
