@@ -28,5 +28,9 @@ export const mountDocBlocksInteractivity = (canvasElement, context) => {
 
     const cleanupTOC = initTOC(canvasElement);
 
-    return cleanupTOC;
+    return () => {
+        if (typeof cleanupTOC === 'function') {
+            cleanupTOC();
+        }
+    };
 };
