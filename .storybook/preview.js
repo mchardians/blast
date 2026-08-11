@@ -57,7 +57,7 @@ const preview = {
             inlineStories: false,
             renderer: async () => {
                 let isMounted = true;
-                let tocObserver = null;
+                let cleanupTOC = null;
 
                 return {
                     render: async (

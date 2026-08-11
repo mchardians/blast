@@ -1,7 +1,15 @@
 export const BASE_STYLES = `
+    .sbdocs.sbdocs-wrapper {
+        padding: 0 !important;
+    }
+    .sbdocs.sbdocs-content {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
     .sb-custom-docs-container {
         padding: 2rem !important;
-        max-width: 56rem !important;
+        max-width: 1400px !important;
         margin: 0 auto !important;
         font-family: ui-sans-serif, system-ui, sans-serif !important;
         color: #334155 !important;

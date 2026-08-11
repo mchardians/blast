@@ -19,6 +19,7 @@ class PublishStorybookConfigTest extends TestCase
         addons: [
             '@storybook/addon-links',
             '@storybook/addon-essentials',
+            '@storybook/addon-controls',
             '@storybook/addon-a11y',
         ],
     };
@@ -107,11 +108,12 @@ class PublishStorybookConfigTest extends TestCase
             "from '../vendor/area17/blast/node_modules/dompurify'",
             $contents,
         );
+
         $this->assertStringNotContainsString("from 'marked'", $contents);
         $this->assertStringNotContainsString("from 'dompurify'", $contents);
     }
 
-    public function test_it_rewrites_relative_internal_imports_in_preview_js(): void
+    public function test_it_rewrites_relative_storybook_js_imports_in_preview_js(): void
     {
         $this->artisan('blast:publish-storybook-config');
 
@@ -151,63 +153,27 @@ class PublishStorybookConfigTest extends TestCase
         );
     }
 
-    public function test_it_expands_addon_essentials_into_individual_dist_paths_in_main_js(): void
+    public function test_it_prepends_vendor_path_to_all_addons_cleanly_in_main_js(): void
     {
         $this->artisan('blast:publish-storybook-config');
 
         $contents = $this->filesystem->get(base_path('.storybook/main.js'));
 
-        $essentials = [
-            'actions',
-            'backgrounds',
-            'controls',
-            'docs',
-            'highlight',
-            'measure',
-            'outline',
-            'toolbars',
-            'viewport',
+        $addons = [
+            '@storybook/addon-links',
+            '@storybook/addon-essentials',
+            '@storybook/addon-controls',
+            '@storybook/addon-a11y',
         ];
 
-        foreach ($essentials as $essential) {
+        foreach ($addons as $addon) {
             $this->assertStringContainsString(
-                "../vendor/area17/blast/node_modules/@storybook/addon-essentials/dist/{$essential}",
+                "'../vendor/area17/blast/node_modules/{$addon}'",
                 $contents,
             );
         }
 
-        $this->assertStringNotContainsString(
-            '@storybook/addon-essentials\'',
-            $contents,
-        );
-    }
-
-    public function test_it_rewrites_addon_links_with_dist_suffix_in_main_js(): void
-    {
-        $this->artisan('blast:publish-storybook-config');
-
-        $contents = $this->filesystem->get(base_path('.storybook/main.js'));
-
-        $this->assertStringContainsString(
-            "'../vendor/area17/blast/node_modules/@storybook/addon-links/dist'",
-            $contents,
-        );
-    }
-
-    public function test_it_rewrites_regular_addons_without_dist_suffix_in_main_js(): void
-    {
-        $this->artisan('blast:publish-storybook-config');
-
-        $contents = $this->filesystem->get(base_path('.storybook/main.js'));
-
-        $this->assertStringContainsString(
-            "'../vendor/area17/blast/node_modules/@storybook/addon-a11y'",
-            $contents,
-        );
-        $this->assertStringNotContainsString(
-            '../vendor/area17/blast/node_modules/@storybook/addon-a11y/dist',
-            $contents,
-        );
+        $this->assertStringNotContainsString('/dist', $contents);
     }
 
     public function test_it_asks_for_confirmation_when_project_config_already_exists(): void
@@ -248,8 +214,8 @@ class PublishStorybookConfigTest extends TestCase
             ->assertExitCode(0);
 
         $contents = $this->filesystem->get(base_path('.storybook/preview.js'));
-
         $this->assertStringNotContainsString('old content', $contents);
+
         $this->assertStringContainsString(
             "from '../vendor/area17/blast/node_modules/marked'",
             $contents,
@@ -264,7 +230,7 @@ class PublishStorybookConfigTest extends TestCase
         $main = $this->filesystem->get(base_path('.storybook/main.js'));
 
         $this->assertStringContainsString(
-            'vendor/area17/blast/node_modules/marked',
+            'vendor/area17/blast/resources/storybook/utilities/styles',
             $preview,
         );
         $this->assertStringContainsString(

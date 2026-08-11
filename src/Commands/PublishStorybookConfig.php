@@ -53,7 +53,6 @@ class PublishStorybookConfig extends Command
      */
     public function handle()
     {
-        // copy blast default configs to .storybook
         $blastConfigPath = $this->vendorPath . '/.storybook';
         $projectConfigPath = base_path('.storybook');
         $copyFiles = true;
@@ -67,13 +66,11 @@ class PublishStorybookConfig extends Command
 
         if (!$copyFiles) {
             $this->error('Aborting');
-
             return 0;
         }
 
         $this->filesystem->copyDirectory($blastConfigPath, $projectConfigPath);
 
-        // Update paths in preview.js
         if ($this->filesystem->exists($projectConfigPath . '/preview.js')) {
             $this->filesystem->replaceInFile(
                 '../public/main.css',
@@ -102,7 +99,6 @@ class PublishStorybookConfig extends Command
             );
         }
 
-        // Update paths in main.js
         $mainJsPath = $projectConfigPath . '/main.js';
 
         if ($this->filesystem->exists($mainJsPath)) {
@@ -121,59 +117,31 @@ class PublishStorybookConfig extends Command
                     trim($matches[1]),
                 );
 
-                $essentials = [
-                    'actions',
-                    'backgrounds',
-                    'controls',
-                    'docs',
-                    'highlight',
-                    'measure',
-                    'outline',
-                    'toolbars',
-                    'viewport',
-                ];
-
                 $replaceWith = [];
 
                 foreach ($toReplace as $item) {
-                    $prefix = '../vendor/area17/blast/node_modules/';
-                    $newPath = Str::of($item)
+                    $cleanAddon = Str::of($item)
+                        ->trim()
                         ->between("'", "'")
-                        ->start($prefix);
+                        ->between('"', '"')
+                        ->toString();
 
-                    if (Str::contains($item, '@storybook/addon-essentials')) {
-                        $newEssentials = [];
-                        $newPath = $newPath->finish('/dist/');
-
-                        foreach ($essentials as $essential) {
-                            $newEssentials[] = $newPath
-                                ->finish($essential)
-                                ->start("'")
-                                ->finish("'")
-                                ->toString();
-                        }
-
-                        $replaceWith = array_merge(
-                            $replaceWith,
-                            $newEssentials,
-                        );
-                    } else {
-                        if (Str::contains($item, '@storybook/addon-links')) {
-                            $newPath = $newPath->finish('/dist');
-                        }
-
-                        $replaceWith[] = $newPath
-                            ->start("'")
-                            ->finish("'")
-                            ->toString();
+                    if (empty($cleanAddon)) {
+                        continue;
                     }
-                }
 
-                // dd($replaceWith);
+                    if (!Str::contains($cleanAddon, 'vendor/area17/blast')) {
+                        $newPath = "../vendor/area17/blast/node_modules/{$cleanAddon}";
+                    } else {
+                        $newPath = $cleanAddon;
+                    }
+
+                    $replaceWith[] = "'{$newPath}'";
+                }
 
                 $this->filesystem->replaceInFile(
                     $matches[1],
-                    implode(",\n", $replaceWith),
+                    implode(",\n        ", $replaceWith),
                     $mainJsPath,
                 );
             }
