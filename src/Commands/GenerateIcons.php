@@ -22,7 +22,7 @@ class GenerateIcons extends Command
      *
      * @var string
      */
-    protected $description = 'Generate a JSON manifest of icons from the Metronic Keenicons CSS file.';
+    protected $description = 'Generate a JSON manifest of icons from the Metronic Keenicons CSS file based on options or blast config.';
 
     /**
      * Execute the console command.
@@ -33,14 +33,18 @@ class GenerateIcons extends Command
     {
         $sourcePath =
             $this->option('source') ?:
+            config('blast.icon_gallery.source') ?:
             public_path('assets/plugins/global/plugins.bundle.css');
+
         $outputPath =
-            $this->option('output') ?: public_path('assets/keenicons.json');
+            $this->option('output') ?:
+            config('blast.icon_gallery.output') ?:
+            public_path('assets/keenicons.json');
 
         if (!File::exists($sourcePath)) {
             $this->error("Source CSS file not found at: {$sourcePath}");
             $this->info(
-                'Please provide the correct path using the --source option.',
+                'Please provide the correct path using the --source option or config/blast.php.',
             );
             return self::FAILURE;
         }
