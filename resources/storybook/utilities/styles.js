@@ -264,34 +264,37 @@ export const DOCBLOCK_STYLES = `
 
     .sb-custom-controls-wrapper {
         margin: 2rem 0;
-        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-        border-radius: 4px;
-        overflow: hidden;
         border: 1px solid #e2e8f0;
+        border-radius: 5px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        background: #ffffff;
     }
 
     .sb-controls-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.875rem;
-        background: #fff;
-        margin: 0 !important;
+        font-family: ui-sans-serif, system-ui, sans-serif !important;
+        font-size: 14px;
     }
 
     .sb-controls-table th {
-        background: #f8fafc;
-        padding: 0.875rem 1rem;
         text-align: left;
+        padding: 16px 20px;
+        color: #64748b;
         font-weight: 600;
-        color: #334155;
+        font-size: 13px;
         border-bottom: 1px solid #e2e8f0;
+        background: #ffffff;
     }
 
     .sb-controls-table td {
-        padding: 0.875rem 1rem;
-        border-bottom: 1px solid #f1f5f9;
-        vertical-align: middle;
+        padding: 20px;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: top;
+        color: #334155;
     }
+
+    .sb-controls-table tr:last-child td { border-bottom: none; }
 
     .sb-prop-name {
         color: #0f172a;
@@ -302,13 +305,109 @@ export const DOCBLOCK_STYLES = `
         border: 1px solid #e2e8f0;
     }
 
-    .sb-control-input {
-        padding: 0.375rem 0.5rem;
+    .sb-control-textarea {
+        width: 100%;
+        max-width: 280px;
+        padding: 10px 12px;
         border: 1px solid #cbd5e1;
         border-radius: 4px;
-        font-size: 0.875rem;
-        width: 100%;
-        max-width: 250px;
+        font-size: 14px;
+        font-family: inherit;
+        color: #1e293b;
+        background-color: #ffffff;
+        resize: vertical;
+        min-height: 42px;
+        box-sizing: border-box;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03) inset;
+    }
+
+    .sb-control-textarea:focus {
+        outline: none;
+        border-color: #38bdf8;
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+
+    .sb-control-bool-toggle {
+        display: inline-flex;
+        background-color: #e2e8f0;
+        border-radius: 20px;
+        padding: 3px;
+    }
+
+    .sb-bool-btn {
+        appearance: none;
+        border: none;
+        background: transparent;
+        padding: 6px 16px;
+        border-radius: 16px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .sb-bool-btn.sb-active {
+        background-color: #ffffff;
+        color: #0f172a;
+        font-weight: 700;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .sb-control-radio-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding-top: 4px;
+    }
+
+    .sb-radio-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #334155;
+        cursor: pointer;
+    }
+
+    .sb-radio-label input[type="radio"] {
+        margin: 0;
+        width: 16px;
+        height: 16px;
+        accent-color: #0ea5e9;
+        cursor: pointer;
+    }
+
+    .sb-control-select {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        width: 100% !important;
+        max-width: 280px !important;
+        padding: 10px 36px 10px 12px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 4px !important;
+        font-size: 14px !important;
+        font-family: inherit !important;
+        color: #1e293b !important;
+        background-color: #ffffff !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 12px center !important;
+        background-size: 16px !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03) inset !important;
+        cursor: pointer !important;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    }
+
+    .sb-control-select::-ms-expand {
+        display: none !important;
+    }
+
+    .sb-control-select:focus {
+        outline: none !important;
+        border-color: #38bdf8 !important;
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2) !important;
     }
 `;
 
