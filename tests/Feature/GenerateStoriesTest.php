@@ -138,4 +138,43 @@ class GenerateStoriesTest extends TestCase
             $adminDashboardData['title'],
         );
     }
+
+    public function test_can_generate_standalone_markdown_docs()
+    {
+        $mdPath = resource_path('views/stories/infrastructure/cicd/cicd.md');
+        File::ensureDirectoryExists(dirname($mdPath));
+        File::put($mdPath, '# CI/CD Documentation');
+
+        $cicdStoriesPath = $this->vendorPath(
+            'stories/infrastructure/cicd.stories.json',
+        );
+
+        $this->assertFalse(File::exists($cicdStoriesPath));
+
+        Artisan::call('blast:generate-stories');
+
+        $this->assertTrue(
+            File::exists($cicdStoriesPath),
+            'File JSON untuk standalone markdown (cicd.md) tidak dibuat.',
+        );
+
+        $cicdData = json_decode(File::get($cicdStoriesPath), true);
+
+        $this->assertEquals('Infrastructure/Cicd', $cicdData['title']);
+
+        $storyParams = $cicdData['stories'][0]['parameters'];
+
+        $this->assertEquals(
+            'docs',
+            $storyParams['viewMode'],
+            'viewMode harus di-set ke "docs" untuk file markdown.',
+        );
+
+        $this->assertTrue(
+            $storyParams['previewTabs']['canvas']['hidden'],
+            'Tab Canvas harus disembunyikan untuk file markdown mandiri.',
+        );
+
+        File::deleteDirectory(resource_path('views/stories/infrastructure'));
+    }
 }

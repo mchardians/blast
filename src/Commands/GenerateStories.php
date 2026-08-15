@@ -261,7 +261,13 @@ class GenerateStories extends Command
             foreach ($files as $file) {
                 $filename = $file->getFilename();
 
-                if (Str::endsWith($filename, '.blade.php')) {
+                // LOGIKA BARU: Deteksi Blade ATAU Markdown (kecuali README.md)
+                $isBlade = Str::endsWith($filename, '.blade.php');
+                $isMarkdown =
+                    Str::endsWith($filename, '.md') &&
+                    strtolower($filename) !== 'readme.md';
+
+                if ($isBlade || $isMarkdown) {
                     $relativePathname = str_replace(
                         '\\',
                         '/',
@@ -273,19 +279,23 @@ class GenerateStories extends Command
                         $file->getRelativePath(),
                     );
                     $pathname = $file->getPathname();
+
                     $storyName =
                         $relativePath == '' ? $filename : $relativePath;
-
-                    // if the view is in the folder root, add it to a generic 'components' directory
                     $isRoot = (bool) !$relativePath;
+
+                    // Deteksi ekstensi untuk pembersihan string
+                    $ext = $isBlade ? '.blade.php' : '.md';
+
                     $storyPath = $relativePath
                         ? $relativePath
-                        : str_replace('.blade.php', '', $filename);
+                        : str_replace($ext, '', $filename);
 
                     $childData = [
                         'name' => $filename,
                         'path' => $relativePathname,
-                        'options' => $this->getStoryOptions($pathname),
+                        'isMarkdown' => $isMarkdown, // Tanda pengenal (Flag) ke buildChildTemplate
+                        'options' => $this->getStoryOptions($pathname), // Tetap izinkan opsi @storybook di dalam Markdown
                     ];
 
                     if (Arr::has($groups, $storyName)) {
@@ -359,28 +369,39 @@ class GenerateStories extends Command
      */
     private function buildChildTemplate($item)
     {
-        $name = str_replace('.blade.php', '', $item['name']);
+        $isMarkdown = Arr::get($item, 'isMarkdown', false);
+        $ext = $isMarkdown ? '.md' : '.blade.php';
+
+        $name = str_replace($ext, '', $item['name']);
+
         $data = [
             'name' => ucwords($name, '/'),
             'parameters' => [
                 'server' => [
-                    'id' => str_replace('.blade.php', '', $item['path']),
-                ],
-                'componentSource' => [
-                    'code' => $this->getCodeSnippet($item['path']),
-                ],
-                'docs' => [
-                    'source' => [
-                        'code' => $this->getCodeSnippet($item['path']),
-                    ],
-                ],
-                'actions' => [
-                    'handles' => $this->getEvents($item),
+                    'id' => str_replace($ext, '', $item['path']),
                 ],
             ],
         ];
 
-        // add story docs
+        if (!$isMarkdown) {
+            $data['parameters']['componentSource'] = [
+                'code' => $this->getCodeSnippet($item['path']),
+            ];
+            $data['parameters']['docs'] = [
+                'source' => [
+                    'code' => $this->getCodeSnippet($item['path']),
+                ],
+            ];
+            $data['parameters']['actions'] = [
+                'handles' => $this->getEvents($item),
+            ];
+        } else {
+            $data['parameters']['viewMode'] = 'docs';
+            $data['parameters']['previewTabs'] = [
+                'canvas' => ['hidden' => true],
+            ];
+        }
+
         $storyPath =
             $this->storyViewsPath . '/' . Str::beforeLast($item['path'], '/');
         $storyDocs = $this->getDocs($storyPath, $name);
@@ -389,13 +410,11 @@ class GenerateStories extends Command
             $data['parameters']['docs']['description']['story'] = $storyDocs;
         }
 
-        // build options array
         if (Arr::has($item, 'options')) {
             $options = $item['options'];
 
             if (Arr::has($options, 'preset')) {
                 $preset = $this->dataStore->get($options['preset']);
-
                 if (is_array($preset) && !empty($preset)) {
                     foreach ($preset as $key => $settings) {
                         if (is_array($settings)) {
@@ -414,7 +433,6 @@ class GenerateStories extends Command
 
             if (Arr::has($options, 'presetArgs')) {
                 $presetArgs = $options['presetArgs'];
-
                 foreach ($presetArgs as $key => $preset) {
                     if (is_array($preset)) {
                         $args = array_map(function ($item) {
@@ -423,7 +441,6 @@ class GenerateStories extends Command
                     } else {
                         $args = $this->dataStore->get($preset)['args'] ?? [];
                     }
-
                     $options['args'][$key] = $args;
                 }
             }
@@ -433,9 +450,7 @@ class GenerateStories extends Command
             }
 
             if (Arr::has($options, 'status')) {
-                $data['parameters']['status'] = [
-                    'type' => $options['status'],
-                ];
+                $data['parameters']['status'] = ['type' => $options['status']];
             }
 
             if (Arr::has($options, 'layout')) {
@@ -469,14 +484,17 @@ class GenerateStories extends Command
                 'blast.storybook_default_view_mode',
                 false,
             );
-            if ($defaultViewMode || Arr::has($options, 'viewMode')) {
+
+            if (
+                !$isMarkdown &&
+                ($defaultViewMode || Arr::has($options, 'viewMode'))
+            ) {
                 $data['parameters']['viewMode'] =
                     $options['viewMode'] ?? $defaultViewMode;
             }
 
             if (Arr::has($options, 'assetGroup')) {
                 $data['args']['assetGroup'] = $options['assetGroup'];
-
                 if (!Arr::has($data['argTypes'], 'assetGroup')) {
                     $data['argTypes']['assetGroup'] = [
                         'table' => ['disable' => true],
@@ -485,10 +503,14 @@ class GenerateStories extends Command
             }
         }
 
-        $data['hash'] = $this->getBladeChecksum(
-            $item['path'],
-            $data['args'] ?? [],
-        );
+        if (!$isMarkdown) {
+            $data['hash'] = $this->getBladeChecksum(
+                $item['path'],
+                $data['args'] ?? [],
+            );
+        } else {
+            $data['hash'] = md5($storyDocs ?: '');
+        }
 
         return $data;
     }
