@@ -119,11 +119,11 @@ class GenerateStoriesTest extends TestCase
 
         $this->assertTrue(
             File::exists($gettingStartedPath),
-            'File JSON untuk getting-started tidak ditemukan.',
+            'The JSON file for getting-started was not found.',
         );
         $this->assertTrue(
             File::exists($adminDashboardPath),
-            'File JSON untuk admin_dashboard tidak ditemukan.',
+            'The JSON file for admin_dashboard was not found.',
         );
 
         $gettingStartedData = json_decode(File::get($gettingStartedPath), true);
@@ -141,7 +141,7 @@ class GenerateStoriesTest extends TestCase
 
     public function test_can_generate_standalone_markdown_docs()
     {
-        $mdPath = resource_path('views/stories/infrastructure/cicd/cicd.md');
+        $mdPath = resource_path('views/stories/infrastructure/cicd/README.md');
         File::ensureDirectoryExists(dirname($mdPath));
         File::put($mdPath, '# CI/CD Documentation');
 
@@ -155,7 +155,7 @@ class GenerateStoriesTest extends TestCase
 
         $this->assertTrue(
             File::exists($cicdStoriesPath),
-            'File JSON untuk standalone markdown (cicd.md) tidak dibuat.',
+            'The JSON file for the standalone markdown (README.md) was not created.',
         );
 
         $cicdData = json_decode(File::get($cicdStoriesPath), true);
@@ -167,12 +167,12 @@ class GenerateStoriesTest extends TestCase
         $this->assertEquals(
             'docs',
             $storyParams['viewMode'],
-            'viewMode harus di-set ke "docs" untuk file markdown.',
+            'The viewMode must be set to "docs" for markdown files.',
         );
 
         $this->assertTrue(
             $storyParams['previewTabs']['canvas']['hidden'],
-            'Tab Canvas harus disembunyikan untuk file markdown mandiri.',
+            'The Canvas tab must be hidden for standalone markdown files.',
         );
 
         File::deleteDirectory(resource_path('views/stories/infrastructure'));

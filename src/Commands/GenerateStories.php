@@ -258,14 +258,22 @@ class GenerateStories extends Command
         $groups = [];
 
         if ($files) {
+            $dirsWithBlade = [];
+            foreach ($files as $file) {
+                if (Str::endsWith($file->getFilename(), '.blade.php')) {
+                    $dirsWithBlade[$file->getPath()] = true;
+                }
+            }
+
             foreach ($files as $file) {
                 $filename = $file->getFilename();
+                $path = $file->getPath();
 
-                // LOGIKA BARU: Deteksi Blade ATAU Markdown (kecuali README.md)
                 $isBlade = Str::endsWith($filename, '.blade.php');
+
                 $isMarkdown =
                     Str::endsWith($filename, '.md') &&
-                    strtolower($filename) !== 'readme.md';
+                    !isset($dirsWithBlade[$path]);
 
                 if ($isBlade || $isMarkdown) {
                     $relativePathname = str_replace(
@@ -284,7 +292,6 @@ class GenerateStories extends Command
                         $relativePath == '' ? $filename : $relativePath;
                     $isRoot = (bool) !$relativePath;
 
-                    // Deteksi ekstensi untuk pembersihan string
                     $ext = $isBlade ? '.blade.php' : '.md';
 
                     $storyPath = $relativePath
@@ -294,8 +301,8 @@ class GenerateStories extends Command
                     $childData = [
                         'name' => $filename,
                         'path' => $relativePathname,
-                        'isMarkdown' => $isMarkdown, // Tanda pengenal (Flag) ke buildChildTemplate
-                        'options' => $this->getStoryOptions($pathname), // Tetap izinkan opsi @storybook di dalam Markdown
+                        'isMarkdown' => $isMarkdown,
+                        'options' => $this->getStoryOptions($pathname),
                     ];
 
                     if (Arr::has($groups, $storyName)) {
@@ -333,7 +340,6 @@ class GenerateStories extends Command
         $docsPath = $this->storyViewsPath . '/' . $item['path'];
         $docsFiles = glob($docsPath . '/*.md');
 
-        // If it's a root story, check if the name has been changed and update the parent title
         if (Arr::has($item, 'isRoot') && $item['isRoot']) {
             $name = $childStories[0]['name'] ?? false;
 
@@ -352,7 +358,15 @@ class GenerateStories extends Command
             'stories' => $childStories,
         ];
 
-        if (count($docsFiles) > 0) {
+        $isMarkdownOnly = true;
+        foreach ($item['children'] as $child) {
+            if (!Arr::get($child, 'isMarkdown', false)) {
+                $isMarkdownOnly = false;
+                break;
+            }
+        }
+
+        if (count($docsFiles) > 0 && !$isMarkdownOnly) {
             $data['tags'][] = 'autodocs';
         }
 
@@ -372,10 +386,10 @@ class GenerateStories extends Command
         $isMarkdown = Arr::get($item, 'isMarkdown', false);
         $ext = $isMarkdown ? '.md' : '.blade.php';
 
-        $name = str_replace($ext, '', $item['name']);
+        $originalName = str_replace($ext, '', $item['name']);
 
         $data = [
-            'name' => ucwords($name, '/'),
+            'name' => $isMarkdown ? 'Docs' : ucwords($originalName, '/'),
             'parameters' => [
                 'server' => [
                     'id' => str_replace($ext, '', $item['path']),
@@ -400,11 +414,16 @@ class GenerateStories extends Command
             $data['parameters']['previewTabs'] = [
                 'canvas' => ['hidden' => true],
             ];
+
+            $data['parameters']['componentSource'] = ['code' => ''];
+            $data['parameters']['docs'] = ['source' => ['code' => '']];
+            $data['parameters']['actions'] = ['handles' => []];
         }
 
         $storyPath =
             $this->storyViewsPath . '/' . Str::beforeLast($item['path'], '/');
-        $storyDocs = $this->getDocs($storyPath, $name);
+
+        $storyDocs = $this->getDocs($storyPath, $originalName);
 
         if ($storyDocs) {
             $data['parameters']['docs']['description']['story'] = $storyDocs;
