@@ -179,36 +179,45 @@ return [
 
     'vendor_path' => 'vendor/area17/blast',
 
-    'components' => [
-        'docs-page' => \A17\Blast\Components\DocsPages\DocsPage::class,
-        'ui-colors' => \A17\Blast\Components\DocsPages\UiColors::class,
-        'ui-spacing' => \A17\Blast\Components\DocsPages\UiSpacing::class,
-        'ui-width' => \A17\Blast\Components\DocsPages\UiWidth::class,
-        'ui-min-width' => \A17\Blast\Components\DocsPages\UiMinWidth::class,
-        'ui-max-width' => \A17\Blast\Components\DocsPages\UiMaxWidth::class,
-        'ui-height' => \A17\Blast\Components\DocsPages\UiHeight::class,
-        'ui-min-height' => \A17\Blast\Components\DocsPages\UiMinHeight::class,
-        'ui-max-height' => \A17\Blast\Components\DocsPages\UiMaxHeight::class,
-        'ui-border-width' =>
-            \A17\Blast\Components\DocsPages\UiBorderWidth::class,
-        'ui-border-radius' =>
-            \A17\Blast\Components\DocsPages\UiBorderRadius::class,
-        'ui-opacity' => \A17\Blast\Components\DocsPages\UiOpacity::class,
-        'ui-shadows' => \A17\Blast\Components\DocsPages\UiShadows::class,
-        'ui-transition' => \A17\Blast\Components\DocsPages\UiTransition::class,
-        'ui-font-size' => \A17\Blast\Components\DocsPages\UiFontSize::class,
-        'ui-font-weight' => \A17\Blast\Components\DocsPages\UiFontWeight::class,
-        'ui-line-height' => \A17\Blast\Components\DocsPages\UiLineHeight::class,
-        'ui-letter-spacing' =>
-            \A17\Blast\Components\DocsPages\UiLetterSpacing::class,
-        'ui-breakpoints' =>
-            \A17\Blast\Components\DocsPages\UiBreakpoints::class,
-        'ui-columns' => \A17\Blast\Components\DocsPages\UiColumns::class,
-        'ui-gutter-inner' =>
-            \A17\Blast\Components\DocsPages\UiGutterInner::class,
-        'ui-gutter-outer' =>
-            \A17\Blast\Components\DocsPages\UiGutterOuter::class,
-        'ui-container' => \A17\Blast\Components\DocsPages\UiContainer::class,
-        'ui-typesets' => \A17\Blast\Components\DocsPages\UiTypesets::class,
-    ],
+    'components' => array_filter(
+        [
+            'docs-page' => \A17\Blast\Components\DocsPages\DocsPage::class,
+            'ui-colors' => \A17\Blast\Components\DocsPages\UiColors::class,
+            'ui-spacing' => \A17\Blast\Components\DocsPages\UiSpacing::class,
+            'ui-width' => \A17\Blast\Components\DocsPages\UiWidth::class,
+            'ui-min-width' => \A17\Blast\Components\DocsPages\UiMinWidth::class,
+            'ui-max-width' => \A17\Blast\Components\DocsPages\UiMaxWidth::class,
+            'ui-height' => \A17\Blast\Components\DocsPages\UiHeight::class,
+            'ui-min-height' =>
+                \A17\Blast\Components\DocsPages\UiMinHeight::class,
+            'ui-max-height' =>
+                \A17\Blast\Components\DocsPages\UiMaxHeight::class,
+            'ui-border-width' =>
+                \A17\Blast\Components\DocsPages\UiBorderWidth::class,
+            'ui-border-radius' =>
+                \A17\Blast\Components\DocsPages\UiBorderRadius::class,
+            'ui-opacity' => \A17\Blast\Components\DocsPages\UiOpacity::class,
+            'ui-shadows' => \A17\Blast\Components\DocsPages\UiShadows::class,
+            'ui-transition' =>
+                \A17\Blast\Components\DocsPages\UiTransition::class,
+            'ui-font-size' => \A17\Blast\Components\DocsPages\UiFontSize::class,
+            'ui-font-weight' =>
+                \A17\Blast\Components\DocsPages\UiFontWeight::class,
+            'ui-line-height' =>
+                \A17\Blast\Components\DocsPages\UiLineHeight::class,
+            'ui-letter-spacing' =>
+                \A17\Blast\Components\DocsPages\UiLetterSpacing::class,
+            'ui-breakpoints' =>
+                \A17\Blast\Components\DocsPages\UiBreakpoints::class,
+            'ui-columns' => \A17\Blast\Components\DocsPages\UiColumns::class,
+            'ui-gutter-inner' =>
+                \A17\Blast\Components\DocsPages\UiGutterInner::class,
+            'ui-gutter-outer' =>
+                \A17\Blast\Components\DocsPages\UiGutterOuter::class,
+            'ui-container' =>
+                \A17\Blast\Components\DocsPages\UiContainer::class,
+            'ui-typesets' => \A17\Blast\Components\DocsPages\UiTypesets::class,
+        ],
+        'class_exists',
+    ),
 ];
