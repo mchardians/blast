@@ -161,15 +161,37 @@ class GenerateStoriesTest extends TestCase
         $cicdData = json_decode(File::get($cicdStoriesPath), true);
 
         $this->assertEquals('Infrastructure/Cicd', $cicdData['title']);
+        $this->assertContains(
+            'autodocs',
+            $cicdData['tags'],
+            'The root story group must contain the autodocs tag to trigger the Docs page.',
+        );
 
-        $storyParams = $cicdData['stories'][0]['parameters'];
+        $dummyStory = $cicdData['stories'][0];
 
+        $this->assertArrayNotHasKey(
+            'server',
+            $dummyStory['parameters'],
+            'The server parameter MUST be omitted for markdown to prevent Laravel View Not Found exceptions.',
+        );
+
+        $this->assertContains(
+            '!dev',
+            $dummyStory['tags'],
+            'The dummy canvas story must be hidden from the sidebar using the !dev tag.',
+        );
+
+        $storyParams = $dummyStory['parameters'];
+
+        $this->assertTrue(
+            $storyParams['docsOnly'] ?? false,
+            'The docsOnly parameter must be set to true.',
+        );
         $this->assertEquals(
             'docs',
             $storyParams['viewMode'],
-            'The viewMode must be set to "docs" for markdown files.',
+            'The viewMode must be explicitly forced to "docs".',
         );
-
         $this->assertTrue(
             $storyParams['previewTabs']['canvas']['hidden'],
             'The Canvas tab must be hidden for standalone markdown files.',
