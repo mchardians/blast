@@ -161,36 +161,25 @@ class GenerateStoriesTest extends TestCase
         $cicdData = json_decode(File::get($cicdStoriesPath), true);
 
         $this->assertEquals('Infrastructure/Cicd', $cicdData['title']);
-        $this->assertNotContains(
+        $this->assertContains(
             'autodocs',
             $cicdData['tags'],
-            'The autodocs tag must be omitted for standalone markdown to prevent duplicate Docs entries.',
+            'The autodocs tag must be included to generate the Docs page.',
         );
 
         $dummyStory = $cicdData['stories'][0];
 
-        $this->assertEquals(
-            'Docs',
-            $dummyStory['name'],
-            'The standalone markdown story must be renamed to "Docs".',
-        );
-
-        $this->assertArrayNotHasKey(
-            'server',
-            $dummyStory['parameters'],
-            'The server parameter MUST be omitted for markdown to prevent Laravel View Not Found exceptions.',
+        $this->assertContains(
+            '!dev',
+            $dummyStory['tags'],
+            'The dummy component must be hidden using the !dev tag.',
         );
 
         $storyParams = $dummyStory['parameters'];
 
         $this->assertTrue(
-            $storyParams['docsOnly'] ?? false,
-            'The docsOnly parameter must be set to true.',
-        );
-        $this->assertEquals(
-            'docs',
-            $storyParams['viewMode'],
-            'The viewMode must be explicitly forced to "docs".',
+            $storyParams['docs']['disable'],
+            'The docs.disable parameter must be true to prevent iframe execution.',
         );
         $this->assertTrue(
             $storyParams['previewTabs']['canvas']['hidden'],
