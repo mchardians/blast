@@ -358,7 +358,15 @@ class GenerateStories extends Command
             'stories' => $childStories,
         ];
 
-        if (count($docsFiles) > 0) {
+        $isMarkdownOnly = true;
+        foreach ($item['children'] as $child) {
+            if (!Arr::get($child, 'isMarkdown', false)) {
+                $isMarkdownOnly = false;
+                break;
+            }
+        }
+
+        if (count($docsFiles) > 0 && !$isMarkdownOnly) {
             $data['tags'][] = 'autodocs';
         }
 
@@ -381,7 +389,7 @@ class GenerateStories extends Command
         $originalName = str_replace($ext, '', $item['name']);
 
         $data = [
-            'name' => ucwords($originalName, '/'),
+            'name' => $isMarkdown ? 'Docs' : ucwords($originalName, '/'),
             'parameters' => [],
         ];
 
@@ -401,15 +409,12 @@ class GenerateStories extends Command
                 'handles' => $this->getEvents($item),
             ];
         } else {
-            $data['tags'] = ['!dev'];
-
             $data['parameters']['docsOnly'] = true;
             $data['parameters']['viewMode'] = 'docs';
             $data['parameters']['previewTabs'] = [
                 'canvas' => ['hidden' => true],
             ];
 
-            // ANTI-CRASH FALLBACK
             $data['parameters']['componentSource'] = ['code' => ''];
             $data['parameters']['docs'] = ['source' => ['code' => '']];
             $data['parameters']['actions'] = ['handles' => []];
