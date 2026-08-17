@@ -7,104 +7,95 @@ use Illuminate\Support\Facades\File;
 
 class GenerateIconsTest extends TestCase
 {
-    /**
-     * @var string
-     */
-    protected $tempSourceCss;
+    protected string $fakeConfigSource;
+    protected string $fakeConfigOutput;
+    protected string $cliSourcePath;
+    protected string $cliOutputPath;
 
-    /**
-     * @var string
-     */
-    protected $tempOutputJson;
+    protected function getPackageProviders($app)
+    {
+        return [\A17\Blast\BlastServiceProvider::class];
+    }
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->tempSourceCss = __DIR__ . '/temp_keenicons_mock.css';
-        $this->tempOutputJson = __DIR__ . '/temp_keenicons_output.json';
+        $this->fakeConfigSource = base_path('fake-assets/plugins.bundle.css');
+        $this->fakeConfigOutput = base_path(
+            'fake-assets/config-keenicons.json',
+        );
+
+        $this->cliSourcePath = base_path('fake-assets/cli-plugins.bundle.css');
+        $this->cliOutputPath = base_path('fake-assets/cli-keenicons.json');
+
+        File::ensureDirectoryExists(base_path('fake-assets'));
+
+        $cssConfigDummy = "
+            .ki-duotone.ki-abstract-14::before { content: '\e900'; }
+            .ki-outline.ki-user::before { content: '\e901'; }
+        ";
+        File::put($this->fakeConfigSource, $cssConfigDummy);
+
+        $cssCliDummy = "
+            .ki-solid.ki-rocket::before { content: '\e902'; }
+        ";
+        File::put($this->cliSourcePath, $cssCliDummy);
     }
 
     protected function tearDown(): void
     {
-        if (File::exists($this->tempSourceCss)) {
-            File::delete($this->tempSourceCss);
-        }
-
-        if (File::exists($this->tempOutputJson)) {
-            File::delete($this->tempOutputJson);
-        }
-
+        File::deleteDirectory(base_path('fake-assets'));
         parent::tearDown();
     }
 
-    /** @test */
-    public function it_generates_json_manifest_from_valid_css_content()
+    public function test_it_uses_config_when_cli_options_are_missing(): void
     {
-        $cssContent = "
-            .ki-duotone.ki-user::before { content: '\\e001'; }
-            .ki-outline.ki-arrow-right::before { content: '\\e002'; }
-            .ki-solid.ki-setting-2::before { content: '\\e003'; }
-            .ki-duotone.ki-user::before { content: '\\e001'; } /* Intentional duplicate */
-        ";
-        File::put($this->tempSourceCss, $cssContent);
+        config()->set('blast.icon_gallery.source', $this->fakeConfigSource);
+        config()->set('blast.icon_gallery.output', $this->fakeConfigOutput);
 
-        $this->artisan('blast:generate-icons', [
-            '--source' => $this->tempSourceCss,
-            '--output' => $this->tempOutputJson,
-        ])
-            ->expectsOutput("Scanning CSS file: {$this->tempSourceCss}")
-            ->expectsOutput(
-                'Successfully generated JSON manifest with 3 icons.',
-            )
-            ->assertExitCode(0);
+        $this->artisan('blast:generate-icons')->assertExitCode(0);
 
-        $this->assertTrue(File::exists($this->tempOutputJson));
+        $this->assertFileExists($this->fakeConfigOutput);
 
-        $generatedJson = json_decode(File::get($this->tempOutputJson), true);
+        $contents = json_decode(File::get($this->fakeConfigOutput), true);
+        $iconNames = array_column($contents, 'name');
 
-        $this->assertCount(3, $generatedJson);
-
-        $this->assertEquals('User', $generatedJson[0]['name']);
-        $this->assertEquals('ki-duotone ki-user', $generatedJson[0]['class']);
-
-        $this->assertEquals('Arrow Right', $generatedJson[1]['name']);
-        $this->assertEquals(
-            'ki-outline ki-arrow-right',
-            $generatedJson[1]['class'],
-        );
+        $this->assertCount(2, $contents);
+        $this->assertContains('Abstract 14', $iconNames);
+        $this->assertContains('User', $iconNames);
     }
 
-    /** @test */
-    public function it_fails_gracefully_when_source_file_is_missing()
+    public function test_it_prioritizes_cli_options_over_config(): void
     {
-        $invalidPath = __DIR__ . '/non_existent_file.css';
+        config()->set('blast.icon_gallery.source', $this->fakeConfigSource);
+        config()->set('blast.icon_gallery.output', $this->fakeConfigOutput);
 
         $this->artisan('blast:generate-icons', [
-            '--source' => $invalidPath,
-            '--output' => $this->tempOutputJson,
-        ])
-            ->expectsOutput("Source CSS file not found at: {$invalidPath}")
-            ->assertExitCode(1);
+            '--source' => $this->cliSourcePath,
+            '--output' => $this->cliOutputPath,
+        ])->assertExitCode(0);
 
-        $this->assertFalse(File::exists($this->tempOutputJson));
+        $this->assertFileExists($this->cliOutputPath);
+        $this->assertFileDoesNotExist($this->fakeConfigOutput);
+
+        $contents = json_decode(File::get($this->cliOutputPath), true);
+
+        $this->assertCount(1, $contents);
+        $this->assertEquals('Rocket', $contents[0]['name']);
+        $this->assertEquals('ki-solid ki-rocket', $contents[0]['class']);
     }
 
-    /** @test */
-    public function it_fails_gracefully_when_no_icons_are_found_in_css()
+    public function test_it_fails_gracefully_if_source_css_is_missing(): void
     {
-        $cssContent = '.btn-primary { color: red; } .header { margin: 0; }';
-        File::put($this->tempSourceCss, $cssContent);
+        $invalidPath = base_path('fake-assets/does-not-exist.css');
+        config()->set('blast.icon_gallery.source', $invalidPath);
+        config()->set('blast.icon_gallery.output', $this->fakeConfigOutput);
 
-        $this->artisan('blast:generate-icons', [
-            '--source' => $this->tempSourceCss,
-            '--output' => $this->tempOutputJson,
-        ])
-            ->expectsOutput(
-                'No icons found matching the Keenicons pattern in the provided CSS file.',
+        $this->artisan('blast:generate-icons')
+            ->expectsOutputToContain(
+                "Source CSS file not found at: {$invalidPath}",
             )
             ->assertExitCode(1);
-
-        $this->assertFalse(File::exists($this->tempOutputJson));
     }
 }

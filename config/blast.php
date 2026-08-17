@@ -31,6 +31,18 @@ return [
     // Uses 'STORYBOOK_PORT' from .env, or defaults to 6006.
     'storybook_port' => env('STORYBOOK_PORT', 6006),
 
+    /*
+    |
+    | This configuration is used by the `blast:generate-icon` command to
+    | scan SVG files and generate an Icon Gallery in Storybook.
+    |
+    */
+    'icon_gallery' => [
+        'source' => resource_path('svg'),
+        'output' => base_path('stories/IconGallery.stories.json'),
+        'extension' => '.svg',
+    ],
+
     /**
      * Specify which documentation pages to generate for the Tailwind classes used in your application
      * Defaults to `[]` which will render all

@@ -119,11 +119,11 @@ class GenerateStoriesTest extends TestCase
 
         $this->assertTrue(
             File::exists($gettingStartedPath),
-            'The JSON file for getting-started was not found.',
+            'File JSON untuk getting-started tidak ditemukan.',
         );
         $this->assertTrue(
             File::exists($adminDashboardPath),
-            'The JSON file for admin_dashboard was not found.',
+            'File JSON untuk admin_dashboard tidak ditemukan.',
         );
 
         $gettingStartedData = json_decode(File::get($gettingStartedPath), true);
@@ -137,55 +137,5 @@ class GenerateStoriesTest extends TestCase
             'Admin Dashboard/User Profile',
             $adminDashboardData['title'],
         );
-    }
-
-    public function test_can_generate_standalone_markdown_docs()
-    {
-        $mdPath = resource_path('views/stories/infrastructure/cicd/README.md');
-        File::ensureDirectoryExists(dirname($mdPath));
-        File::put($mdPath, '# CI/CD Documentation');
-
-        $cicdStoriesPath = $this->vendorPath(
-            'stories/infrastructure/cicd.stories.json',
-        );
-
-        $this->assertFalse(File::exists($cicdStoriesPath));
-
-        Artisan::call('blast:generate-stories');
-
-        $this->assertTrue(
-            File::exists($cicdStoriesPath),
-            'The JSON file for the standalone markdown (README.md) was not created.',
-        );
-
-        $cicdData = json_decode(File::get($cicdStoriesPath), true);
-
-        $this->assertEquals('Infrastructure/Cicd', $cicdData['title']);
-        $this->assertContains(
-            'autodocs',
-            $cicdData['tags'],
-            'The autodocs tag must be included to generate the Docs page.',
-        );
-
-        $dummyStory = $cicdData['stories'][0];
-
-        $this->assertContains(
-            '!dev',
-            $dummyStory['tags'],
-            'The dummy component must be hidden using the !dev tag.',
-        );
-
-        $storyParams = $dummyStory['parameters'];
-
-        $this->assertTrue(
-            $storyParams['docs']['disable'],
-            'The docs.disable parameter must be true to prevent iframe execution.',
-        );
-        $this->assertTrue(
-            $storyParams['previewTabs']['canvas']['hidden'],
-            'The Canvas tab must be hidden for standalone markdown files.',
-        );
-
-        File::deleteDirectory(resource_path('views/stories/infrastructure'));
     }
 }

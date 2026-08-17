@@ -258,24 +258,10 @@ class GenerateStories extends Command
         $groups = [];
 
         if ($files) {
-            $dirsWithBlade = [];
-            foreach ($files as $file) {
-                if (Str::endsWith($file->getFilename(), '.blade.php')) {
-                    $dirsWithBlade[$file->getPath()] = true;
-                }
-            }
-
             foreach ($files as $file) {
                 $filename = $file->getFilename();
-                $path = $file->getPath();
 
-                $isBlade = Str::endsWith($filename, '.blade.php');
-
-                $isMarkdown =
-                    Str::endsWith($filename, '.md') &&
-                    !isset($dirsWithBlade[$path]);
-
-                if ($isBlade || $isMarkdown) {
+                if (Str::endsWith($filename, '.blade.php')) {
                     $relativePathname = str_replace(
                         '\\',
                         '/',
@@ -287,21 +273,18 @@ class GenerateStories extends Command
                         $file->getRelativePath(),
                     );
                     $pathname = $file->getPathname();
-
                     $storyName =
                         $relativePath == '' ? $filename : $relativePath;
+
+                    // if the view is in the folder root, add it to a generic 'components' directory
                     $isRoot = (bool) !$relativePath;
-
-                    $ext = $isBlade ? '.blade.php' : '.md';
-
                     $storyPath = $relativePath
                         ? $relativePath
-                        : str_replace($ext, '', $filename);
+                        : str_replace('.blade.php', '', $filename);
 
                     $childData = [
                         'name' => $filename,
                         'path' => $relativePathname,
-                        'isMarkdown' => $isMarkdown,
                         'options' => $this->getStoryOptions($pathname),
                     ];
 
@@ -340,6 +323,7 @@ class GenerateStories extends Command
         $docsPath = $this->storyViewsPath . '/' . $item['path'];
         $docsFiles = glob($docsPath . '/*.md');
 
+        // If it's a root story, check if the name has been changed and update the parent title
         if (Arr::has($item, 'isRoot') && $item['isRoot']) {
             $name = $childStories[0]['name'] ?? false;
 
@@ -375,62 +359,43 @@ class GenerateStories extends Command
      */
     private function buildChildTemplate($item)
     {
-        $isMarkdown = Arr::get($item, 'isMarkdown', false);
-        $ext = $isMarkdown ? '.md' : '.blade.php';
-
-        $originalName = str_replace($ext, '', $item['name']);
-
+        $name = str_replace('.blade.php', '', $item['name']);
         $data = [
-            'name' => $isMarkdown ? 'Docs' : ucwords($originalName, '/'),
-            'parameters' => [],
-        ];
-
-        if (!$isMarkdown) {
-            $data['parameters']['server'] = [
-                'id' => str_replace($ext, '', $item['path']),
-            ];
-            $data['parameters']['componentSource'] = [
-                'code' => $this->getCodeSnippet($item['path']),
-            ];
-            $data['parameters']['docs'] = [
-                'source' => [
+            'name' => ucwords($name, '/'),
+            'parameters' => [
+                'server' => [
+                    'id' => str_replace('.blade.php', '', $item['path']),
+                ],
+                'componentSource' => [
                     'code' => $this->getCodeSnippet($item['path']),
                 ],
-            ];
-            $data['parameters']['actions'] = [
-                'handles' => $this->getEvents($item),
-            ];
-        } else {
-            $data['tags'] = ['!dev'];
+                'docs' => [
+                    'source' => [
+                        'code' => $this->getCodeSnippet($item['path']),
+                    ],
+                ],
+                'actions' => [
+                    'handles' => $this->getEvents($item),
+                ],
+            ],
+        ];
 
-            $data['parameters']['docsOnly'] = true;
-            $data['parameters']['viewMode'] = 'docs';
-            $data['parameters']['previewTabs'] = [
-                'canvas' => ['hidden' => true],
-            ];
-
-            $data['parameters']['docs'] = [
-                'disable' => true,
-            ];
-        }
-
+        // add story docs
         $storyPath =
             $this->storyViewsPath . '/' . Str::beforeLast($item['path'], '/');
-
-        $storyDocs = $this->getDocs($storyPath, $originalName);
+        $storyDocs = $this->getDocs($storyPath, $name);
 
         if ($storyDocs) {
-            if (!isset($data['parameters']['docs'])) {
-                $data['parameters']['docs'] = [];
-            }
             $data['parameters']['docs']['description']['story'] = $storyDocs;
         }
 
+        // build options array
         if (Arr::has($item, 'options')) {
             $options = $item['options'];
 
             if (Arr::has($options, 'preset')) {
                 $preset = $this->dataStore->get($options['preset']);
+
                 if (is_array($preset) && !empty($preset)) {
                     foreach ($preset as $key => $settings) {
                         if (is_array($settings)) {
@@ -449,6 +414,7 @@ class GenerateStories extends Command
 
             if (Arr::has($options, 'presetArgs')) {
                 $presetArgs = $options['presetArgs'];
+
                 foreach ($presetArgs as $key => $preset) {
                     if (is_array($preset)) {
                         $args = array_map(function ($item) {
@@ -457,6 +423,7 @@ class GenerateStories extends Command
                     } else {
                         $args = $this->dataStore->get($preset)['args'] ?? [];
                     }
+
                     $options['args'][$key] = $args;
                 }
             }
@@ -466,7 +433,9 @@ class GenerateStories extends Command
             }
 
             if (Arr::has($options, 'status')) {
-                $data['parameters']['status'] = ['type' => $options['status']];
+                $data['parameters']['status'] = [
+                    'type' => $options['status'],
+                ];
             }
 
             if (Arr::has($options, 'layout')) {
@@ -500,17 +469,14 @@ class GenerateStories extends Command
                 'blast.storybook_default_view_mode',
                 false,
             );
-
-            if (
-                !$isMarkdown &&
-                ($defaultViewMode || Arr::has($options, 'viewMode'))
-            ) {
+            if ($defaultViewMode || Arr::has($options, 'viewMode')) {
                 $data['parameters']['viewMode'] =
                     $options['viewMode'] ?? $defaultViewMode;
             }
 
             if (Arr::has($options, 'assetGroup')) {
                 $data['args']['assetGroup'] = $options['assetGroup'];
+
                 if (!Arr::has($data['argTypes'], 'assetGroup')) {
                     $data['argTypes']['assetGroup'] = [
                         'table' => ['disable' => true],
@@ -519,14 +485,10 @@ class GenerateStories extends Command
             }
         }
 
-        if (!$isMarkdown) {
-            $data['hash'] = $this->getBladeChecksum(
-                $item['path'],
-                $data['args'] ?? [],
-            );
-        } else {
-            $data['hash'] = md5($storyDocs ?: '');
-        }
+        $data['hash'] = $this->getBladeChecksum(
+            $item['path'],
+            $data['args'] ?? [],
+        );
 
         return $data;
     }

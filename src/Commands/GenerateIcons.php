@@ -14,15 +14,15 @@ class GenerateIcons extends Command
      * @var string
      */
     protected $signature = 'blast:generate-icons
-                            {--source= : The path to the Keenicons CSS file (e.g., public/assets/css/keenicons.css)}
-                            {--output= : The path to save the generated JSON file (e.g., public/assets/keenicons.json)}';
+                            {--source= : The path to the style CSS file (e.g., public/assets/css/style.css)}
+                            {--output= : The path to save the generated JSON file (e.g., public/assets/style.json)}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Generate a JSON manifest of icons from the Metronic Keenicons CSS file.';
+    protected $description = 'Generate a JSON manifest of icons from the production asset CSS file.';
 
     /**
      * Execute the console command.
@@ -33,14 +33,18 @@ class GenerateIcons extends Command
     {
         $sourcePath =
             $this->option('source') ?:
+            config('blast.icon_gallery.source') ?:
             public_path('assets/plugins/global/plugins.bundle.css');
+
         $outputPath =
-            $this->option('output') ?: public_path('assets/keenicons.json');
+            $this->option('output') ?:
+            config('blast.icon_gallery.output') ?:
+            public_path('assets/plugins.json');
 
         if (!File::exists($sourcePath)) {
             $this->error("Source CSS file not found at: {$sourcePath}");
             $this->info(
-                'Please provide the correct path using the --source option.',
+                'Please provide the correct path using the --source option or config/blast.php.',
             );
             return self::FAILURE;
         }
@@ -55,7 +59,7 @@ class GenerateIcons extends Command
 
         if (empty($matches[0])) {
             $this->warn(
-                'No icons found matching the Keenicons pattern in the provided CSS file.',
+                'No icons found matching the icons pattern in the provided CSS file.',
             );
             return self::FAILURE;
         }
