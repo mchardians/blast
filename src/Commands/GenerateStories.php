@@ -162,7 +162,12 @@ class GenerateStories extends Command
                 $parsedStory['stories'],
             );
 
-            $fileData = json_encode($parsedStory, JSON_PRETTY_PRINT);
+            $fileData = json_encode(
+                $parsedStory,
+                JSON_PRETTY_PRINT |
+                    JSON_UNESCAPED_SLASHES |
+                    JSON_UNESCAPED_UNICODE,
+            );
 
             $this->info('Story created for: ' . $componentPath);
 
@@ -182,7 +187,12 @@ class GenerateStories extends Command
 
             $template = $this->buildStoryTemplate($storyData);
 
-            $fileData = json_encode($template, JSON_PRETTY_PRINT);
+            $fileData = json_encode(
+                $template,
+                JSON_PRETTY_PRINT |
+                    JSON_UNESCAPED_SLASHES |
+                    JSON_UNESCAPED_UNICODE,
+            );
 
             $storyPathInfo = pathinfo($storyPath);
             $storyDir = $storyPathInfo['dirname'];
