@@ -233,7 +233,12 @@ class GenerateStories extends Command
                 $normalizedGroupPath .
                 '.stories.json';
             $storyPath = Str::beforeLast($storyFilePath, '/');
-            $fileData = json_encode($template, JSON_PRETTY_PRINT);
+            $fileData = json_encode(
+                $template,
+                JSON_PRETTY_PRINT |
+                    JSON_UNESCAPED_SLASHES |
+                    JSON_UNESCAPED_UNICODE,
+            );
 
             $this->info('');
             $progressBar->setMessage(
