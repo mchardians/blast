@@ -1,12 +1,14 @@
 import { test, expect } from '@playwright/test';
 
+const docsStoryId = process.env.E2E_DOCS_STORY_ID;
+
 test.describe('Custom Doc Blocks DOM Integration', () => {
+    test.skip(!docsStoryId, 'E2E_DOCS_STORY_ID is not set');
+
     let previewFrame;
 
     test.beforeEach(async ({ page }) => {
-        await page.goto(
-            'http://127.0.0.1:6006/?path=/docs/components-buttons--docs'
-        );
+        await page.goto(`/?path=/docs/${docsStoryId}`);
 
         previewFrame = page.frameLocator('#storybook-preview-iframe');
 

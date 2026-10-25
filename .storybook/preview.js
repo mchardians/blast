@@ -95,8 +95,17 @@ const preview = {
                                       .replace(/[^a-z0-9]+/g, '-')
                                 : 'default';
 
+                        const fallbackStoryId = `${componentId}--${storyNameSlug}`;
+
                         const context = {
-                            baseStoryId: `${componentId}--${storyNameSlug}`,
+                            baseStoryId: stories[0]?.id || fallbackStoryId,
+                            stories: stories.map((story) => ({
+                                id: story.id,
+                                name: story.name,
+                                sourceCode:
+                                    story.parameters?.docs?.source?.code || '',
+                                defaultArgs: story.args || {}
+                            })),
                             title:
                                 stories.length > 0
                                     ? stories[0].name

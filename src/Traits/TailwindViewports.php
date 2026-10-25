@@ -20,13 +20,35 @@ trait TailwindViewports
         $this->filesystem = $filesystem;
     }
 
+    private function defaultTailwindViewports(): array
+    {
+        $screens = [
+            'sm' => '640px',
+            'md' => '768px',
+            'lg' => '1024px',
+            'xl' => '1280px',
+            '2xl' => '1536px',
+        ];
+
+        $viewports = [];
+
+        foreach ($screens as $key => $width) {
+            $viewports[$key] = [
+                'name' => $key,
+                'styles' => ['width' => $width, 'height' => '100%'],
+            ];
+        }
+
+        return $viewports;
+    }
+
     private function buildTailwindViewports($viewports = false)
     {
         if ($viewports === 'tailwind') {
             $parsedConfig = $this->vendorPath . '/tmp/tailwind.config.php';
 
             if (!$this->filesystem->exists($parsedConfig)) {
-                return false;
+                return $this->defaultTailwindViewports();
             }
 
             $config = include $parsedConfig;

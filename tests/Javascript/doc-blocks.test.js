@@ -1,3 +1,7 @@
+import {
+    parseArgsString,
+    serializeArgs
+} from '../../resources/storybook/helpers/args';
 import { formatSourceCode } from '../../resources/storybook/helpers/formatSourceCode';
 import { parseTypography } from '../../resources/storybook/API/doc-blocks/typography/typography';
 import { parseCanvas } from '../../resources/storybook/API/doc-blocks/canvas/canvas';
@@ -106,6 +110,78 @@ describe('Modular Custom Doc Blocks Architecture', () => {
             expect(result).toMatch(/class="sb-icon-gallery-wrapper"/);
             expect(result).toMatch(/data-json-url="\/data\/icons\.json"/);
             expect(result).toMatch(/class="sb-icon-gallery-loader"/);
+        });
+    });
+
+    describe('8. Argument parsing', () => {
+        it('keeps values that contain a colon', () => {
+            expect(
+                parseArgsString('href:https://example.com;label:Go')
+            ).toEqual({ href: 'https://example.com', label: 'Go' });
+        });
+
+        it('casts booleans and ignores malformed pairs', () => {
+            expect(parseArgsString('a:true;b:false;broken;:novalue')).toEqual({
+                a: true,
+                b: false
+            });
+        });
+
+        it('round-trips through serializeArgs', () => {
+            expect(serializeArgs({ variant: 'outline', isCircle: true })).toBe(
+                'variant:outline;isCircle:true'
+            );
+        });
+    });
+
+    describe('9. Story selection', () => {
+        const multiContext = {
+            ...mockContext,
+            stories: [
+                {
+                    id: 'components-button--primary',
+                    name: 'Primary',
+                    sourceCode: '<x-button>{{ $label }}</x-button>',
+                    defaultArgs: { label: 'One' }
+                },
+                {
+                    id: 'components-button--outline',
+                    name: 'Outline',
+                    sourceCode: '<x-button outline>{{ $label }}</x-button>',
+                    defaultArgs: { label: 'Two' }
+                }
+            ]
+        };
+
+        it('targets another story with the `story` argument', () => {
+            const result = parseCanvas(
+                '[render-canvas:story:outline]',
+                multiContext
+            );
+
+            expect(result).toContain('data-story="components-button--outline"');
+            expect(result).toContain('Two');
+            expect(result).not.toContain('story:outline');
+        });
+
+        it('exposes base args so controls can merge instead of overwrite', () => {
+            const result = parseCanvas(
+                '[render-canvas:variant:outline]',
+                mockContext
+            );
+
+            expect(result).toContain('data-base-args="variant:outline"');
+        });
+    });
+
+    describe('10. Source formatting extras', () => {
+        it('supports raw echo and null-coalescing defaults', () => {
+            const code =
+                '<x-a>{!! $label !!}</x-a><x-b title="{{ $title ?? \'Untitled\' }}"/>';
+            const result = formatSourceCode(code, { label: 'Hi' });
+
+            expect(result).toContain('<x-a>Hi</x-a>');
+            expect(result).toContain('title="Untitled"');
         });
     });
 });

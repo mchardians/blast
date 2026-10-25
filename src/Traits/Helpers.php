@@ -20,6 +20,7 @@ trait Helpers
         $envVars = null,
         $disableOutput = false,
         $disableTty = false,
+        $allowFailure = false,
     ) {
         $process = new Process($command, $this->vendorPath, $envVars);
 
@@ -42,6 +43,19 @@ trait Helpers
         }
 
         $process->run();
+
+        if (!$allowFailure && !$process->isSuccessful()) {
+            $details = $disableOutput
+                ? 'exit code ' . $process->getExitCode()
+                : trim($process->getErrorOutput() ?: $process->getOutput());
+
+            throw new \RuntimeException(
+                'Command failed: ' .
+                    $process->getCommandLine() .
+                    "\n" .
+                    $details,
+            );
+        }
 
         if (!$disableOutput) {
             return $process->getOutput();
@@ -199,12 +213,25 @@ trait Helpers
         );
 
         if ($npmInstall || (!$npmInstall && !$depsInstalled)) {
-            $this->runProcessInBlast(
-                ['npm', 'ci', '--omit=dev', '--ignore-scripts'],
-                false,
-                null,
-                true,
-            );
+            try {
+                $this->runProcessInBlast(
+                    ['npm', 'ci', '--omit=dev', '--ignore-scripts'],
+                    false,
+                    null,
+                    true,
+                );
+            } catch (\RuntimeException $e) {
+                $this->warn(
+                    '`npm ci` failed (lockfile out of sync?). Falling back to `npm install`.',
+                );
+
+                $this->runProcessInBlast(
+                    ['npm', 'install', '--omit=dev', '--ignore-scripts'],
+                    false,
+                    null,
+                    true,
+                );
+            }
 
             $this->installStorybook($this->storybookInstallVersion);
         } else {
@@ -276,7 +303,7 @@ trait Helpers
         } catch (\Exception $e) {
             $this->error($e->getMessage());
 
-            exit();
+            throw $e;
         }
     }
 
@@ -288,6 +315,7 @@ trait Helpers
             false,
             null,
             false,
+            true,
             true,
         );
         $data = json_decode($rawOutput, true);

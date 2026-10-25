@@ -1,5 +1,5 @@
 const config = {
-    stories: ['../vendor/area17/blast/stories/**/*.stories.json'],
+    stories: ['../stories/**/*.stories.json'],
     addons: [
         '@storybook/addon-actions',
         '@storybook/addon-links',

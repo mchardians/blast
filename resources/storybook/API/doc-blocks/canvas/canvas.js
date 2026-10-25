@@ -1,5 +1,7 @@
 import { escapeHtml } from '../../../helpers/escapeHtml';
 import { formatSourceCode } from '../../../helpers/formatSourceCode';
+import { parseArgsString, serializeArgs } from '../../../helpers/args';
+import { selectStory } from '../../../helpers/selectStory';
 
 export const parseCanvas = (htmlString, context) => {
     if (!context.baseStoryId) return htmlString;
@@ -11,23 +13,14 @@ export const parseCanvas = (htmlString, context) => {
     return htmlString.replace(
         /\[render-canvas:(.*?)\]/gi,
         (match, argsString) => {
-            const customArgs = {};
-            if (argsString) {
-                argsString.split(';').forEach((pair) => {
-                    const [k, v] = pair.split(':');
+            const { story: storySlug, ...customArgs } =
+                parseArgsString(argsString);
+            const story = selectStory(context, storySlug);
+            const iframeArgs = serializeArgs(customArgs);
 
-                    if (k && v !== undefined) {
-                        let val = decodeURIComponent(v.replace(/\+/g, ' '));
-                        if (val === 'true') val = true;
-                        if (val === 'false') val = false;
-                        customArgs[k] = val;
-                    }
-                });
-            }
-
-            const finalArgs = { ...context.defaultArgs, ...customArgs };
+            const finalArgs = { ...story.defaultArgs, ...customArgs };
             const escapedCode = escapeHtml(
-                formatSourceCode(context.sourceCode, finalArgs)
+                formatSourceCode(story.sourceCode, finalArgs)
             );
 
             return `
@@ -38,7 +31,7 @@ export const parseCanvas = (htmlString, context) => {
                         <button class="sb-toolbar-btn sb-zoom-reset" title="Reset Zoom">${iconReset}</button>
                     </div>
                     <div class="sb-canvas-preview-area">
-                        <iframe class="sb-inline-canvas" data-story="${context.baseStoryId}" src="iframe.html?id=${context.baseStoryId}&viewMode=story&args=${argsString}"></iframe>
+                        <iframe class="sb-inline-canvas" data-story="${story.id}" data-base-args="${escapeHtml(iframeArgs)}" src="iframe.html?id=${story.id}&viewMode=story&args=${iframeArgs}"></iframe>
                     </div>
                     <div class="sb-canvas-action-bar">
                         <button class="sb-toggle-code-btn">Show code</button>

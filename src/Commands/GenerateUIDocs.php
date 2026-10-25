@@ -89,9 +89,12 @@ class GenerateUIDocs extends Command
 
             return false;
         } elseif (!$this->filesystem->exists($this->configPath)) {
-            $this->error(
-                'Tailwind config file not found at `' . $this->configPath . '`',
+            $this->warn(
+                'Tailwind config file not found at `' .
+                    $this->configPath .
+                    '`. Projects without a JS Tailwind config (e.g. Tailwind CSS 4) are not supported by the UI docs generator; skipping.',
             );
+
             return false;
         }
 
@@ -129,13 +132,21 @@ class GenerateUIDocs extends Command
             return 1;
         }
 
-        $this->runProcessInBlast(
-            ['node', './src/resolveTailwindConfig.js'],
-            false,
-            [
-                'CONFIGPATH' => $this->configPath,
-            ],
-        );
+        try {
+            $this->runProcessInBlast(
+                ['node', './src/resolveTailwindConfig.js'],
+                false,
+                [
+                    'CONFIGPATH' => $this->configPath,
+                ],
+            );
+        } catch (\RuntimeException $e) {
+            $this->warn(
+                'Could not resolve the Tailwind config: ' . $e->getMessage(),
+            );
+
+            return 1;
+        }
 
         if ($this->filesystem->exists($this->parsedConfig)) {
             $this->config = include $this->parsedConfig;

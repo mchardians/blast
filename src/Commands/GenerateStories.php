@@ -258,10 +258,17 @@ class GenerateStories extends Command
         $progressBar->finish();
 
         if ($watch) {
-            $this->runProcessInBlast(['npm', 'run', 'watch-components'], true, [
-                'PROJECTPATH' => base_path(),
-                'COMPONENTPATH' => base_path('resources/views/stories'),
-            ]);
+            $this->runProcessInBlast(
+                ['npm', 'run', 'watch-components'],
+                true,
+                [
+                    'PROJECTPATH' => base_path(),
+                    'COMPONENTPATH' => base_path('resources/views/stories'),
+                ],
+                false,
+                false,
+                true,
+            );
         }
     }
 
@@ -521,7 +528,16 @@ class GenerateStories extends Command
             'stories.' .
             str_replace('/', '.', str_replace('.blade.php', '', $filepath));
 
-        return md5(view($bladePath, $bladeArgs)->render());
+        try {
+            return md5(view($bladePath, $bladeArgs)->render());
+        } catch (\Throwable $e) {
+            $this->warn(
+                "Could not render `{$bladePath}` for checksum: " .
+                    $e->getMessage(),
+            );
+
+            return '';
+        }
     }
 
     /**

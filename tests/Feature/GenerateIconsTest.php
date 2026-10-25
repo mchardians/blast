@@ -21,24 +21,28 @@ class GenerateIconsTest extends TestCase
     {
         parent::setUp();
 
-        $this->fakeConfigSource = base_path('fake-assets/plugins.bundle.css');
-        $this->fakeConfigOutput = base_path(
-            'fake-assets/config-keenicons.json',
+        config()->set(
+            'blast.icon_gallery.pattern',
+            '/\.(icon-set)\.(icon-[a-zA-Z0-9\-]+)::?before/',
         );
+        config()->set('blast.icon_gallery.name_prefix', 'icon-');
 
-        $this->cliSourcePath = base_path('fake-assets/cli-plugins.bundle.css');
-        $this->cliOutputPath = base_path('fake-assets/cli-keenicons.json');
+        $this->fakeConfigSource = base_path('fake-assets/icons.css');
+        $this->fakeConfigOutput = base_path('fake-assets/config-icons.json');
+
+        $this->cliSourcePath = base_path('fake-assets/cli-icons.css');
+        $this->cliOutputPath = base_path('fake-assets/cli-icons.json');
 
         File::ensureDirectoryExists(base_path('fake-assets'));
 
         $cssConfigDummy = "
-            .ki-duotone.ki-abstract-14::before { content: '\e900'; }
-            .ki-outline.ki-user::before { content: '\e901'; }
+            .icon-set.icon-abstract-14::before { content: '\e900'; }
+            .icon-set.icon-user::before { content: '\e901'; }
         ";
         File::put($this->fakeConfigSource, $cssConfigDummy);
 
         $cssCliDummy = "
-            .ki-solid.ki-rocket::before { content: '\e902'; }
+            .icon-set.icon-rocket::before { content: '\e902'; }
         ";
         File::put($this->cliSourcePath, $cssCliDummy);
     }
@@ -83,7 +87,34 @@ class GenerateIconsTest extends TestCase
 
         $this->assertCount(1, $contents);
         $this->assertEquals('Rocket', $contents[0]['name']);
-        $this->assertEquals('ki-solid ki-rocket', $contents[0]['class']);
+        $this->assertEquals('icon-set icon-rocket', $contents[0]['class']);
+    }
+
+    public function test_it_fails_when_no_source_is_defined(): void
+    {
+        config()->set('blast.icon_gallery.source', null);
+
+        $this->artisan('blast:generate-icons')
+            ->expectsOutputToContain('No icon CSS source defined.')
+            ->assertExitCode(1);
+    }
+
+    public function test_it_supports_a_single_class_pattern_from_the_cli(): void
+    {
+        File::put(
+            $this->cliSourcePath,
+            ".fa-home::before { content: '\\f015'; }",
+        );
+
+        $this->artisan('blast:generate-icons', [
+            '--source' => $this->cliSourcePath,
+            '--output' => $this->cliOutputPath,
+            '--pattern' => '/\.(fa-[a-z\-]+)::before/',
+        ])->assertExitCode(0);
+
+        $contents = json_decode(File::get($this->cliOutputPath), true);
+
+        $this->assertEquals('fa-home', $contents[0]['class']);
     }
 
     public function test_it_fails_gracefully_if_source_css_is_missing(): void

@@ -14,15 +14,16 @@ class GenerateIcons extends Command
      * @var string
      */
     protected $signature = 'blast:generate-icons
-                            {--source= : The path to the style CSS file (e.g., public/assets/css/style.css)}
-                            {--output= : The path to save the generated JSON file (e.g., public/assets/style.json)}';
+                            {--source= : Path to the CSS file that defines the icon classes}
+                            {--output= : Path to save the generated JSON manifest}
+                            {--pattern= : Regex used to find icon classes (each capture group is one class)}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Generate a JSON manifest of icons from the production asset CSS file.';
+    protected $description = 'Generate a JSON manifest of icons from an icon CSS file.';
 
     /**
      * Execute the console command.
@@ -32,20 +33,39 @@ class GenerateIcons extends Command
     public function handle()
     {
         $sourcePath =
-            $this->option('source') ?:
-            config('blast.icon_gallery.source') ?:
-            public_path('assets/plugins/global/plugins.bundle.css');
-
+            $this->option('source') ?: config('blast.icon_gallery.source');
         $outputPath =
             $this->option('output') ?:
             config('blast.icon_gallery.output') ?:
-            public_path('assets/plugins.json');
+            public_path('assets/icons.json');
+        $pattern =
+            $this->option('pattern') ?:
+            config('blast.icon_gallery.pattern') ?:
+            '/\.([a-zA-Z][a-zA-Z0-9_\-]*)::?before/';
+        $namePrefix = (string) config('blast.icon_gallery.name_prefix', '');
 
-        if (!File::exists($sourcePath)) {
+        if (!$sourcePath) {
+            $this->error('No icon CSS source defined.');
+            $this->info(
+                'Provide it with the --source option or `icon_gallery.source` in config/blast.php.',
+            );
+
+            return self::FAILURE;
+        }
+
+        if (!File::isFile($sourcePath)) {
             $this->error("Source CSS file not found at: {$sourcePath}");
             $this->info(
                 'Please provide the correct path using the --source option or config/blast.php.',
             );
+
+            return self::FAILURE;
+        }
+
+        // Validasi pola regex dari config atau opsi CLI
+        if (@preg_match($pattern, '') === false) {
+            $this->error("Invalid icon pattern: {$pattern}");
+
             return self::FAILURE;
         }
 
@@ -53,36 +73,45 @@ class GenerateIcons extends Command
 
         $cssContent = File::get($sourcePath);
 
-        $pattern = '/\.(ki-[a-zA-Z0-9\-]+)\.(ki-[a-zA-Z0-9\-]+)::?before/';
+        preg_match_all($pattern, $cssContent, $matches, PREG_SET_ORDER);
 
-        preg_match_all($pattern, $cssContent, $matches);
-
-        if (empty($matches[0])) {
+        if (empty($matches)) {
             $this->warn(
                 'No icons found matching the icons pattern in the provided CSS file.',
             );
+
             return self::FAILURE;
         }
 
-        $types = $matches[1];
-        $names = $matches[2];
-
         $uniqueIcons = [];
 
-        for ($i = 0; $i < count($matches[0]); $i++) {
-            $typeClass = $types[$i];
-            $nameClass = $names[$i];
-            $fullClass = "{$typeClass} {$nameClass}";
+        foreach ($matches as $match) {
+            // Setiap capture group adalah satu class; group terakhir menjadi nama
+            $classes = array_values(array_filter(array_slice($match, 1)));
 
-            if (!isset($uniqueIcons[$fullClass])) {
-                $cleanName = str_replace('-', ' ', substr($nameClass, 3));
-                $formattedName = Str::title($cleanName);
-
-                $uniqueIcons[$fullClass] = [
-                    'name' => $formattedName,
-                    'class' => $fullClass,
-                ];
+            if (empty($classes)) {
+                continue;
             }
+
+            $fullClass = implode(' ', $classes);
+
+            if (isset($uniqueIcons[$fullClass])) {
+                continue;
+            }
+
+            $nameClass = end($classes);
+
+            if (
+                $namePrefix !== '' &&
+                Str::startsWith($nameClass, $namePrefix)
+            ) {
+                $nameClass = Str::after($nameClass, $namePrefix);
+            }
+
+            $uniqueIcons[$fullClass] = [
+                'name' => Str::title(str_replace(['-', '_'], ' ', $nameClass)),
+                'class' => $fullClass,
+            ];
         }
 
         $icons = array_values($uniqueIcons);

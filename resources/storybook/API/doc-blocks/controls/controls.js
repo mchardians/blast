@@ -1,3 +1,6 @@
+import { parseArgsString, serializeArgs } from '../../../helpers/args';
+import { escapeHtml } from '../../../helpers/escapeHtml';
+
 export const parseControls = (htmlString) => {
     return htmlString.replace(/\[render-(controls|argtypes)\]/gi, () => {
         return `<div class="sb-custom-controls-wrapper"></div>`;
@@ -16,14 +19,15 @@ export const initControlsInteractivity = (canvasElement, argTypes) => {
 
     const updateIframes = (key, val) => {
         currentArgs[key] = val;
-        const argsString = Object.entries(currentArgs)
-            .map(([k, v]) => `${k}:${v}`)
-            .join(';');
-
         const iframes = canvasElement.querySelectorAll('.sb-inline-canvas');
         iframes.forEach((iframe) => {
             const exactStoryId = iframe.getAttribute('data-story');
-            iframe.src = `iframe.html?id=${exactStoryId}&viewMode=story&args=${argsString}`;
+            const baseArgs = parseArgsString(
+                iframe.getAttribute('data-base-args')
+            );
+            const mergedArgs = serializeArgs({ ...baseArgs, ...currentArgs });
+
+            iframe.src = `iframe.html?id=${exactStoryId}&viewMode=story&args=${mergedArgs}`;
         });
     };
 
@@ -67,18 +71,18 @@ export const initControlsInteractivity = (canvasElement, argTypes) => {
                 ? '<span class="sb-prop-required">*</span>'
                 : '';
 
-            tdName.innerHTML = `<span class="sb-prop-name">${key}</span>${isRequired}`;
+            tdName.innerHTML = `<span class="sb-prop-name">${escapeHtml(key)}</span>${isRequired}`;
 
             const tdDesc = document.createElement('td');
             const typeHtml = typeName
-                ? `<div class="sb-prop-type" style="margin-top: 8px;"><code>${typeName}</code></div>`
+                ? `<div class="sb-prop-type" style="margin-top: 8px;"><code>${escapeHtml(String(typeName))}</code></div>`
                 : '';
-            tdDesc.innerHTML = `<span class="sb-prop-desc">${schema.description || '-'}</span>${typeHtml}`;
+            tdDesc.innerHTML = `<span class="sb-prop-desc">${escapeHtml(schema.description || '-')}</span>${typeHtml}`;
 
             const tdDefault = document.createElement('td');
             const defaultHtml =
                 defaultVal !== undefined && defaultVal !== ''
-                    ? `<div class="sb-prop-default"><code>${defaultVal}</code></div>`
+                    ? `<div class="sb-prop-default"><code>${escapeHtml(String(defaultVal))}</code></div>`
                     : '-';
             tdDefault.innerHTML = defaultHtml;
 

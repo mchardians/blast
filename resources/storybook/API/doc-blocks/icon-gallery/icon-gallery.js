@@ -1,3 +1,5 @@
+import { escapeHtml } from '../../../helpers/escapeHtml';
+
 export const parseIconGallery = (htmlString) => {
     return htmlString.replace(
         /\[render-icongallery:(.*?)\]/gi,
@@ -5,7 +7,7 @@ export const parseIconGallery = (htmlString) => {
             const fetchUrl = url.trim();
 
             return `
-                <div class="sb-icon-gallery-wrapper" data-json-url="${fetchUrl}" style="margin: 2rem 0;">
+                <div class="sb-icon-gallery-wrapper" data-json-url="${escapeHtml(fetchUrl)}" style="margin: 2rem 0;">
                     <div class="sb-icon-gallery-loader" style="padding: 3rem; text-align: center; color: #64748b; background: #f8fafc; border-radius: 0.5rem; border: 1px dashed #cbd5e1;">
                         <span class="sb-loader-text">Loading icon library...</span>
                     </div>

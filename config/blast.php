@@ -1,7 +1,10 @@
 <?php
 
 return [
-    'enabled' => env('BLAST_ENABLED', true),
+    'enabled' => env(
+        'BLAST_ENABLED',
+        env('APP_ENV', 'production') !== 'production',
+    ),
 
     'storybook_version' => '7.6.24',
 
@@ -10,9 +13,9 @@ return [
     // ---------------------------------------------------------
     // This is where Storybook sends requests to render your components.
     // 1. It reads 'STORYBOOK_SERVER_URL' from your .env file.
-    // 2. Based on your .env, this is dynamically built as "${APP_URL}:8000".
-    // 3. If it's missing from .env, it falls back to 'APP_URL'.
-    // 4. Finally, it appends '/storybook_preview' to the URL.
+    // 2. If it's missing from .env, it falls back to 'APP_URL'.
+    // 3. Finally, it appends '/storybook_preview' to the URL.
+    // Set STORYBOOK_SERVER_URL WITHOUT the path, e.g. "http://localhost:8000".
     // Example result: "http://localhost:8000/storybook_preview"
     'storybook_server_url' =>
         env('STORYBOOK_SERVER_URL', env('APP_URL')) . '/storybook_preview',
@@ -33,14 +36,23 @@ return [
 
     /*
     |
-    | This configuration is used by the `blast:generate-icon` command to
-    | scan SVG files and generate an Icon Gallery in Storybook.
+    | This configuration is used by the `blast:generate-icons` command to
+    | scan an icon font CSS file and generate a JSON manifest that is
+    | rendered by the `[render-icongallery:<url>]` doc block.
+    |
+    | - source: path to the compiled CSS file containing the icon classes
+    | - output: path of the generated JSON manifest (must be publicly served,
+    |   it is NOT a story file and must not be placed in the stories folder)
+    | - pattern: regex that matches an icon selector. Every capture group is
+    |   one class; the last group is used as the icon name
+    | - name_prefix: optional prefix removed from the icon name
     |
     */
     'icon_gallery' => [
-        'source' => resource_path('svg'),
-        'output' => base_path('stories/IconGallery.stories.json'),
-        'extension' => '.svg',
+        'source' => null,
+        'output' => public_path('assets/icons.json'),
+        'pattern' => '/\.([a-zA-Z][a-zA-Z0-9_\-]*)::?before/',
+        'name_prefix' => '',
     ],
 
     /**

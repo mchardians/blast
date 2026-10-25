@@ -6,7 +6,7 @@ This document outlines the architecture, features, and usage of the modular Vani
 
 The system is divided into three main layers:
 
-**1. Frontend Parsing Engine:** A collection of modular Vanilla JS parsers located in `resources/frontend/js/doc-blocks/`.
+**1. Frontend Parsing Engine:** A collection of modular Vanilla JS parsers located in `resources/storybook/API/doc-blocks/`.
 
 **2. The Orchestrator:** The `index.js` file that chains the parsing pipeline and DOM interactivity.
 
@@ -15,28 +15,31 @@ The system is divided into three main layers:
 ### Directory Structure
 
 ```text
-blast-stable-windows-support/
+blast/
+├── .storybook/
+│   └── preview.js                     # Supplies context (args, argTypes, source) to the orchestrator
 ├── resources/
-│   └── frontend/
-│       └── js/
-│           ├── styles.js              # Defensive CSS for doc blocks
-│           └── doc-blocks/            # Modular Parsers
-│               ├── index.js           # The Orchestrator
-│               ├── helpers.js         # HTML escaping & formatting
-│               ├── Canvas.js          # [render-canvas:...]
-│               ├── Controls.js        # [render-controls]
-│               ├── IconGallery.js     # [render-icongallery:...]
-│               ├── Source.js          # [render-source]
-│               ├── Story.js           # [render-story:...]
-│               └── Typography.js      # [render-title], [render-description]
+│   └── storybook/
+│       ├── helpers/                   # escapeHtml, formatSourceCode, args, selectStory
+│       ├── utilities/
+│       │   └── styles.js              # Defensive CSS for doc blocks
+│       └── API/
+│           └── doc-blocks/            # Modular parsers
+│               ├── index.js           # The orchestrator
+│               ├── canvas/            # [render-canvas:...]
+│               ├── controls/          # [render-controls]
+│               ├── icon-gallery/      # [render-icongallery:...]
+│               ├── source/            # [render-source]
+│               ├── story/             # [render-story:...]
+│               ├── table-of-contents/ # automatic "On this page" TOC
+│               └── typography/        # [render-title], [render-description]
 ├── src/
 │   └── Commands/
-│       └── GenerateIcons.php          # Backend CSS Scanner for IconGallery
+│       └── GenerateIcons.php          # Backend CSS scanner for the icon gallery
 └── tests/
-    ├── E2E/                           # Playwright DOM Integration Tests
-    ├── Feature/                       # PHPUnit tests for Artisan Commands
-    └── Javascript/                    # Jest Unit Tests for JS Modules
-
+    ├── e2e/                           # Playwright DOM integration tests
+    ├── Feature/                       # PHPUnit tests for Artisan commands
+    └── Javascript/                    # Jest unit tests for JS modules
 ```
 
 ## 2. Available Macros & Usage Guide
@@ -63,6 +66,9 @@ Renders the actual Blade component inside an isolated iframe.
 
         Usage (Default Args): [render-canvas:]
 
+        Usage (another story of the same component): `[render-canvas:story:outline;variant:outline]`
+        The `story` key selects a story by name slug; all other keys are passed as args.
+
     Story: Renders a pure iframe without the toolbar or action bar.
 
         Usage: `[render-story:variant:outline]`
@@ -81,11 +87,11 @@ Renders a standalone, syntax-highlighted code block containing the formatted Bla
 
 ## 3. Icon Gallery & Asset Generator
 
-The Icon Gallery module asynchronously fetches a JSON manifest of icons and renders a responsive grid with a click-to-copy feature for the HTML snippet (e.g., `<i class="ki-duotone ki-user"></i>`).
+The Icon Gallery module asynchronously fetches a JSON manifest of icons and renders a responsive grid with a click-to-copy feature for the HTML snippet (e.g., `<i class="icon-set icon-user"></i>`).
 
 **Step 1: Generate the JSON Manifest (Backend)**
 
-Instead of manually maintaining thousands of icons, use the built-in Artisan command to scan the Metronic Keenicons CSS file and generate the JSON payload automatically.
+Instead of manually maintaining thousands of icons, use the built-in Artisan command to scan your icon font CSS file and generate the JSON payload automatically.
 
 Basic Usage:
 
@@ -93,13 +99,13 @@ Basic Usage:
 php artisan blast:generate-icons
 ```
 
-(Defaults to scanning public/assets/plugins/global/plugins.bundle.css and outputting to public/assets/keenicons.json).
+Settings come from `blast.icon_gallery` in `config/blast.php`: `source` (CSS file, required), `output` (public JSON manifest), `pattern` (regex matching an icon selector; every capture group is one class) and `name_prefix`.
 
 **Custom Paths:**
 
 ```code
 
-php artisan blast:generate-icons --source="public/css/metronic/style.css" --output="public/docs/keenicons.json"
+php artisan blast:generate-icons --source="public/css/icons.css" --output="public/docs/icons.json"
 
 ```
 
@@ -107,7 +113,7 @@ php artisan blast:generate-icons --source="public/css/metronic/style.css" --outp
 
 Point the macro to the publicly accessible JSON file generated in Step 1.
 
-    Usage: [render-icongallery: /assets/keenicons.json]
+    Usage: [render-icongallery: /assets/icons.json]
 
 ## 4. Testing Pipeline
 
@@ -126,7 +132,7 @@ npm run test:js
 **End-to-End Testing (Frontend - Playwright)**
 
 Validates DOM interactivity (Zooming, Toggling Code, Reactive URL updates via Controls, and Iframe isolation) across Chromium, Firefox, and WebKit.
-Note: Ensure the local Storybook server is running (php artisan blast:launch) before executing this test.
+Note: Ensure the local Storybook server is running (php artisan blast:launch) and set `E2E_DOCS_STORY_ID` to a docs page that uses the macros (e.g. `E2E_DOCS_STORY_ID=components-button--docs npm run test:e2e`).
 
 ```code
 
@@ -184,5 +190,5 @@ Use this variant for actions that result in data loss or unrecoverable states.
 
 You can pair the button with any of the following icons. Click an icon to copy its snippet.
 
-[render-icongallery: /assets/keenicons.json]
+[render-icongallery: /assets/icons.json]
 ```

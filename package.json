@@ -17,7 +17,7 @@
     "prettier": "prettier",
     "prettier:php": "prettier --write -- \"./src/**/*.php\"",
     "test:js": "jest tests/Javascript",
-    "test:e2e": "playwright test tests/E2E",
+    "test:e2e": "playwright test",
     "test:all": "npm run test:js && npm run test:e2e"
   },
   "devDependencies": {
@@ -57,5 +57,9 @@
     "*.js": "eslint --no-fix",
     "*.css": "stylelint --fix",
     "*.{js,css,md,php}": "prettier --write"
+  },
+  "allowScripts": {
+    "esbuild@0.18.20": true,
+    "unrs-resolver@1.12.2": true
   }
 }

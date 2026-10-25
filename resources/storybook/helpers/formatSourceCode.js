@@ -3,9 +3,16 @@ export const formatSourceCode = (rawCode, args) => {
 
     let code = rawCode;
 
-    code = code.replace(/\{\{\s*\$([a-zA-Z0-9_]+)\s*\}\}/g, (match, key) => {
-        return args[key] !== undefined ? args[key] : match;
-    });
+    code = code.replace(
+        /\{(?:\{|!!)\s*\$([a-zA-Z0-9_]+)(?:\s*\?\?\s*(?:'([^']*)'|"([^"]*)"))?\s*(?:\}|!!)\}/g,
+        (match, key, singleQuoted, doubleQuoted) => {
+            if (args[key] !== undefined) return args[key];
+
+            const fallback = singleQuoted ?? doubleQuoted;
+
+            return fallback !== undefined ? fallback : match;
+        }
+    );
 
     code = code.replace(
         /\s*:([a-zA-Z0-9_-]+)="\$([a-zA-Z0-9_]+)"/g,
